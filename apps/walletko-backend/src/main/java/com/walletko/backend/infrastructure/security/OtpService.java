@@ -3,14 +3,20 @@ package com.walletko.backend.infrastructure.security;
 import com.walletko.backend.infrastructure.mail.SmtpMailer;
 import com.walletko.backend.infrastructure.persistence.entity.VerificationEntity;
 import com.walletko.backend.infrastructure.persistence.repository.VerificationJpaRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.security.SecureRandom;
 import java.time.OffsetDateTime;
 
 @Service
 public class OtpService {
+
+    private static final Logger log = LoggerFactory.getLogger(OtpService.class);
+
     private final VerificationJpaRepository verificationRepo;
     private final SmtpMailer mailer;
     private final int otpLength;
@@ -50,10 +56,15 @@ public class OtpService {
         entity.setCreatedAt(OffsetDateTime.now());
         verificationRepo.save(entity);
 
+        log.info("==================================================");
+        log.info("🔐 [DEV MODE] OTP CODE FOR {}: {}", email, otp);
+        log.info("==================================================");
+
         try {
             mailer.sendOtpEmail(email, otp);
+            log.info("OTP email sent successfully to {}", email);
         } catch (Exception e) {
-            // Log but don't fail — the OTP is stored
+            log.warn("SMTP delivery skipped/failed ({}). Using console OTP above.", e.getMessage());
         }
     }
 

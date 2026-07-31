@@ -1,5 +1,5 @@
 import type { ComponentProps } from "react";
-import { useFieldContext } from "src/shared/form/form-setup";
+import { useFieldContext } from "src/shared/form/form-context";
 import { Combobox, type ComboboxOption } from "src/shared/ui/combobox";
 import { FormField } from "src/shared/ui/form-field";
 

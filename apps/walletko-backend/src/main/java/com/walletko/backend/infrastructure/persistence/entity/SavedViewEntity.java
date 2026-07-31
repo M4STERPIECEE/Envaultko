@@ -4,7 +4,10 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.OffsetDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "saved_views")
@@ -25,9 +28,9 @@ public class SavedViewEntity {
     @Column(name = "name_filter")
     private String nameFilter;
 
-    @Column(name = "tag_ids", columnDefinition = "TEXT[]")
-    private String tagIds;
-
+    @Column(name = "tag_ids")
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    private List<String> tagIds;
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 

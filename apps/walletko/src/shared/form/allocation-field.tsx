@@ -1,6 +1,6 @@
 import type { ModalAllocation } from "src/shared/components/allocation-disc";
 import { AllocationSliders } from "src/shared/components/allocation-sliders";
-import { useFieldContext } from "src/shared/form/form-setup";
+import { useFieldContext } from "src/shared/form/form-context";
 import { useFormatError } from "src/shared/lib/use-format-error";
 import { cn } from "src/shared/lib/utils";
 import { Label } from "src/shared/ui/label";
