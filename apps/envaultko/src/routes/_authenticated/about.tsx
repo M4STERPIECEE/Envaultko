@@ -12,7 +12,7 @@ export const Route = createFileRoute("/_authenticated/about")({
 const GITHUB_URL = "https://github.com/M4STERPIECEE/Envaultko";
 
 const APP_DESCRIPTION =
-  "Walletko helps you organize your money into pots and stay on top of income, expenses, and transfers.";
+  "Envaultko helps you organize your money into pots and stay on top of income, expenses, and transfers.";
 
 function formatReleaseDate(value: string) {
   return new Date(value).toLocaleDateString("en-US", {
@@ -36,7 +36,7 @@ function AboutPage() {
 
   return (
     <PageContent>
-      <PageHeader eyebrow="About" title="Walletko" />
+      <PageHeader eyebrow="About" title="Envaultko" />
 
       <div className="flex items-center gap-3">
         <Logo className="size-10 shrink-0" />

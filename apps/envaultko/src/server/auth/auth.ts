@@ -48,7 +48,7 @@ export const auth = betterAuth({
         // Not awaited — avoids timing attacks
         mailer.sendMail({
           to: email,
-          subject: "Your Walletko sign-in code",
+          subject: "Your Envaultko sign-in code",
           html,
         });
       },

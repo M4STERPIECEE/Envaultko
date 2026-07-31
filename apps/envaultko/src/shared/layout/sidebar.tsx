@@ -30,7 +30,7 @@ export function Sidebar({
         <Logo className="size-7 shrink-0" />
         {!collapsed && (
           <span className="flex-1 truncate text-base font-semibold tracking-tight text-sidebar-primary">
-            Walletko
+            Envaultko
           </span>
         )}
         {!collapsed && (
