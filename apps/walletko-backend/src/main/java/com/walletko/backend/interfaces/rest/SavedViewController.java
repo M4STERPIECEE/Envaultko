@@ -4,13 +4,14 @@ import com.walletko.backend.application.savedview.*;
 import com.walletko.backend.domain.savedview.*;
 import com.walletko.backend.domain.shared.vo.*;
 import com.walletko.backend.infrastructure.persistence.query.ViewQueries;
-import com.walletko.backend.interfaces.dto.UpsertViewRequest;
+import com.walletko.backend.interfaces.dto.SavedViewListItemDTO;
+import com.walletko.backend.interfaces.dto.request.UpsertViewRequest;
+import com.walletko.backend.interfaces.mapper.SavedViewDtoMapper;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/views")
@@ -20,16 +21,19 @@ public class SavedViewController {
     private final CreateViewService createViewService;
     private final UpdateViewService updateViewService;
     private final DeleteViewService deleteViewService;
+    private final SavedViewDtoMapper savedViewDtoMapper;
 
     public SavedViewController(SavedViewRepository viewRepo, ViewQueries viewQueries,
                                 CreateViewService createViewService,
                                 UpdateViewService updateViewService,
-                                DeleteViewService deleteViewService) {
+                                DeleteViewService deleteViewService,
+                                SavedViewDtoMapper savedViewDtoMapper) {
         this.viewRepo = viewRepo;
         this.viewQueries = viewQueries;
         this.createViewService = createViewService;
         this.updateViewService = updateViewService;
         this.deleteViewService = deleteViewService;
+        this.savedViewDtoMapper = savedViewDtoMapper;
     }
 
     private Id userId(Authentication auth) {
@@ -37,81 +41,52 @@ public class SavedViewController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Map<String, Object>>> listViews(Authentication auth) {
+    public ResponseEntity<List<SavedViewListItemDTO>> listViews(Authentication auth) {
         var views = viewRepo.findAll(userId(auth));
-        return ResponseEntity.ok(views.stream()
-            .map(v -> {
-                var d = v.data();
-                return Map.<String, Object>of(
-                    "id", d.id().value(), "name", d.name().value(),
-                    "description", d.description(), "nameFilter", d.nameFilter(),
-                    "tagIds", d.tagIds().stream().map(Id::value).toList(),
-                    "createdAt", d.createdAt().toOffsetDateTime());
-            })
-            .toList());
+        return ResponseEntity.ok(savedViewDtoMapper.toDtos(views));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getView(Authentication auth, @PathVariable String id) {
+    public ResponseEntity<SavedViewListItemDTO> getView(Authentication auth, @PathVariable String id) {
         var view = viewRepo.findById(new Id(id), userId(auth));
-        if (view.isEmpty()) return ResponseEntity.notFound().build();
-        var d = view.get().data();
-        return ResponseEntity.ok(Map.of(
-            "id", d.id().value(), "name", d.name().value(),
-            "description", d.description(), "nameFilter", d.nameFilter(),
-            "tagIds", d.tagIds().stream().map(Id::value).toList(),
-            "createdAt", d.createdAt().toOffsetDateTime()));
+        return view
+            .map(v -> ResponseEntity.ok(savedViewDtoMapper.toDto(v)))
+            .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/{id}/stats")
     public ResponseEntity<?> getViewStats(Authentication auth, @PathVariable String id) {
         var userId = userId(auth);
-        var view = viewRepo.findById(new Id(id), userId);
-        if (view.isEmpty()) return ResponseEntity.notFound().build();
-        var d = view.get().data();
-        var stats = viewQueries.getViewStats(userId.value(),
-            d.nameFilter(), d.tagIds().stream().map(Id::value).toList());
-        return ResponseEntity.ok(stats);
+        return viewRepo.findById(new Id(id), userId)
+            .map(v -> ResponseEntity.ok(viewQueries.getViewStats(
+                userId.value(), v.nameFilter(), savedViewDtoMapper.tagIdValues(v))))
+            .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/{id}/year-stats")
     public ResponseEntity<?> getViewYearStats(Authentication auth, @PathVariable String id,
                                                @RequestParam int year) {
         var userId = userId(auth);
-        var view = viewRepo.findById(new Id(id), userId);
-        if (view.isEmpty()) return ResponseEntity.notFound().build();
-        var d = view.get().data();
-        var stats = viewQueries.getViewYearStats(userId.value(), year,
-            d.nameFilter(), d.tagIds().stream().map(Id::value).toList());
-        return ResponseEntity.ok(stats);
+        return viewRepo.findById(new Id(id), userId)
+            .map(v -> ResponseEntity.ok(viewQueries.getViewYearStats(
+                userId.value(), year, v.nameFilter(), savedViewDtoMapper.tagIdValues(v))))
+            .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
     public ResponseEntity<Void> createView(Authentication auth,
                                             @Valid @RequestBody UpsertViewRequest req) {
-        try {
-            createViewService.execute(new Name(req.name()), req.description(),
-                req.nameFilter(),
-                req.tagIds() != null ? req.tagIds().stream().map(Id::new).toList() : List.of(),
-                userId(auth));
-            return ResponseEntity.ok().build();
-        } catch (SavedViewNameConflictError e) {
-            throw e;
-        }
+        createViewService.execute(new Name(req.name()), req.description(),
+            req.nameFilter(), savedViewDtoMapper.toIds(req.tagIds()), userId(auth));
+        return ResponseEntity.ok().build();
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<Void> updateView(Authentication auth, @PathVariable String id,
                                             @Valid @RequestBody UpsertViewRequest req) {
-        try {
-            updateViewService.execute(new Id(id), new Name(req.name()), req.description(),
-                req.nameFilter(),
-                req.tagIds() != null ? req.tagIds().stream().map(Id::new).toList() : List.of(),
-                userId(auth));
-            return ResponseEntity.ok().build();
-        } catch (SavedViewNameConflictError e) {
-            throw e;
-        }
+        updateViewService.execute(new Id(id), new Name(req.name()), req.description(),
+            req.nameFilter(), savedViewDtoMapper.toIds(req.tagIds()), userId(auth));
+        return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{id}")

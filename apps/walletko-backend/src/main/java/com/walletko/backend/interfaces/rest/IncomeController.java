@@ -4,15 +4,18 @@ import com.walletko.backend.application.income.*;
 import com.walletko.backend.application.tag.ResolveOwnedTags;
 import com.walletko.backend.domain.income.*;
 import com.walletko.backend.domain.shared.vo.*;
-import com.walletko.backend.infrastructure.persistence.query.DashboardQueries;
-import com.walletko.backend.infrastructure.persistence.query.TransactionQueries;
-import com.walletko.backend.interfaces.dto.ReceiveIncomeRequest;
-import com.walletko.backend.interfaces.dto.UpdateIncomeRequest;
+import com.walletko.backend.interfaces.dto.BlockingPotDTO;
+import com.walletko.backend.interfaces.dto.CancelIncomeResponse;
+import com.walletko.backend.interfaces.dto.CancelPreviewDTO;
+import com.walletko.backend.interfaces.dto.IncomeDTO;
+import com.walletko.backend.interfaces.dto.response.IdResponse;
+import com.walletko.backend.interfaces.dto.request.ReceiveIncomeRequest;
+import com.walletko.backend.interfaces.dto.request.UpdateIncomeRequest;
+import com.walletko.backend.interfaces.mapper.IncomeViewMapper;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/income")
@@ -22,17 +25,20 @@ public class IncomeController {
     private final UpdateIncomeService updateIncomeService;
     private final CancelIncomeService cancelIncomeService;
     private final ResolveOwnedTags resolveOwnedTags;
+    private final IncomeViewMapper incomeViewMapper;
 
     public IncomeController(IncomeRepository incomeRepo,
                              ReceiveIncomeService receiveIncomeService,
                              UpdateIncomeService updateIncomeService,
                              CancelIncomeService cancelIncomeService,
-                             ResolveOwnedTags resolveOwnedTags) {
+                             ResolveOwnedTags resolveOwnedTags,
+                             IncomeViewMapper incomeViewMapper) {
         this.incomeRepo = incomeRepo;
         this.receiveIncomeService = receiveIncomeService;
         this.updateIncomeService = updateIncomeService;
         this.cancelIncomeService = cancelIncomeService;
         this.resolveOwnedTags = resolveOwnedTags;
+        this.incomeViewMapper = incomeViewMapper;
     }
 
     private Id userId(Authentication auth) {
@@ -40,69 +46,59 @@ public class IncomeController {
     }
 
     @PostMapping
-    public ResponseEntity<Map<String, String>> receiveIncome(Authentication auth,
-                                                              @Valid @RequestBody ReceiveIncomeRequest req) {
+    public ResponseEntity<IdResponse> receiveIncome(Authentication auth,
+                                                     @Valid @RequestBody ReceiveIncomeRequest req) {
         var userId = userId(auth);
         var tags = resolveOwnedTags.resolve(userId, req.tags().stream()
             .map(t -> new ResolveOwnedTags.TagInput(t.id(), t.name())).toList());
         var createdAt = req.createdAt() != null ? Datetime.of(req.createdAt()) : null;
         var id = receiveIncomeService.execute(
             new Name(req.name()), Money.fromCents(req.amount()), tags, userId, createdAt);
-        return ResponseEntity.ok(Map.of("id", id.value()));
+        return ResponseEntity.ok(new IdResponse(id.value()));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getIncome(Authentication auth, @PathVariable String id) {
+    public ResponseEntity<IncomeDTO> getIncome(Authentication auth, @PathVariable String id) {
         var userId = userId(auth);
         var income = incomeRepo.findOne(new Id(id), userId);
-        if (income.isEmpty()) return ResponseEntity.notFound().build();
-        var d = income.get().data();
-        return ResponseEntity.ok(Map.of(
-            "id", d.id().value(), "name", d.name().value(),
-            "amount", d.amount().rawCents(), "createdAt", d.createdAt().toOffsetDateTime(),
-            "tags", d.tags().stream().map(t -> Map.of("id", t.data().id().value(), "name", t.data().name().value())).toList()
-        ));
+        return income
+            .map(i -> ResponseEntity.ok(incomeViewMapper.toDto(i)))
+            .orElse(ResponseEntity.notFound().build());
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Map<String, String>> updateIncome(Authentication auth,
-                                                             @PathVariable String id,
-                                                             @Valid @RequestBody UpdateIncomeRequest req) {
+    public ResponseEntity<IdResponse> updateIncome(Authentication auth,
+                                                    @PathVariable String id,
+                                                    @Valid @RequestBody UpdateIncomeRequest req) {
         var userId = userId(auth);
         var tags = resolveOwnedTags.resolve(userId, req.tags().stream()
             .map(t -> new ResolveOwnedTags.TagInput(t.id(), t.name())).toList());
         updateIncomeService.execute(new Id(id), new Name(req.name()),
             Datetime.of(req.date()), tags, userId);
-        return ResponseEntity.ok(Map.of("id", id));
+        return ResponseEntity.ok(new IdResponse(id));
     }
 
     @PostMapping("/{id}/cancel")
-    public ResponseEntity<?> cancelIncome(Authentication auth, @PathVariable String id) {
+    public ResponseEntity<CancelIncomeResponse> cancelIncome(Authentication auth, @PathVariable String id) {
         try {
             cancelIncomeService.execute(new Id(id), userId(auth));
-            return ResponseEntity.ok(Map.of("blocked", false));
+            return ResponseEntity.ok(new CancelIncomeResponse(false, null, null));
         } catch (CancelIncomeBlockedError e) {
-            return ResponseEntity.status(409).body(Map.of(
-                "blocked", true, "code", "WOULD_CAUSE_NEGATIVE_BALANCE",
-                "pots", e.pots().stream()
-                    .map(p -> Map.of("name", p.name(), "shortfall", p.shortfall()))
+            return ResponseEntity.status(409).body(new CancelIncomeResponse(
+                true, "WOULD_CAUSE_NEGATIVE_BALANCE",
+                e.pots().stream()
+                    .map(p -> new BlockingPotDTO(p.name(), p.shortfall()))
                     .toList()
             ));
         }
     }
 
     @GetMapping("/{id}/cancel-preview")
-    public ResponseEntity<?> getCancelPreview(Authentication auth, @PathVariable String id) {
+    public ResponseEntity<CancelPreviewDTO> getCancelPreview(Authentication auth, @PathVariable String id) {
         var userId = userId(auth);
         var income = incomeRepo.findOne(new Id(id), userId);
-        if (income.isEmpty()) return ResponseEntity.notFound().build();
-
-        var snapshots = new DashboardQueries(null, null, null, null) // simplified — in prod, use proper query
-            .computeTotalBalance(userId.value());
-        // Return allocations with pot balances
-        var allocs = income.get().allocations().stream()
-            .map(a -> Map.of("potId", a.potId().value(), "amount", a.amount().rawCents()))
-            .toList();
-        return ResponseEntity.ok(Map.of("allocations", allocs));
+        return income
+            .map(i -> ResponseEntity.ok(incomeViewMapper.toCancelPreview(i.allocations())))
+            .orElse(ResponseEntity.notFound().build());
     }
 }

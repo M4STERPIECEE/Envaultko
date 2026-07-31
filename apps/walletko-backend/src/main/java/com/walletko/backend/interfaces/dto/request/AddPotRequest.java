@@ -1,5 +1,6 @@
-package com.walletko.backend.interfaces.dto;
+package com.walletko.backend.interfaces.dto.request;
 
+import com.walletko.backend.interfaces.dto.OtherPotDTO;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;

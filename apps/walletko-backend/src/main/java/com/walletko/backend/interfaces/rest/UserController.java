@@ -2,7 +2,7 @@ package com.walletko.backend.interfaces.rest;
 
 import com.walletko.backend.application.user.UpdateUserNameService;
 import com.walletko.backend.domain.shared.vo.*;
-import com.walletko.backend.interfaces.dto.UpdateNameRequest;
+import com.walletko.backend.interfaces.dto.request.UpdateNameRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;

@@ -3,13 +3,15 @@ package com.walletko.backend.interfaces.rest;
 import com.walletko.backend.application.tag.*;
 import com.walletko.backend.domain.shared.vo.*;
 import com.walletko.backend.domain.tag.*;
-import com.walletko.backend.interfaces.dto.AddTagRequest;
+import com.walletko.backend.interfaces.dto.PaginatedResponseDTO;
+import com.walletko.backend.interfaces.dto.TagRefDTO;
+import com.walletko.backend.interfaces.dto.request.AddTagRequest;
+import com.walletko.backend.interfaces.mapper.TagViewMapper;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/tags")
@@ -18,13 +20,16 @@ public class TagController {
     private final AddTagService addTagService;
     private final EditTagService editTagService;
     private final DeleteTagService deleteTagService;
+    private final TagViewMapper tagViewMapper;
 
     public TagController(TagRepository tagRepo, AddTagService addTagService,
-                          EditTagService editTagService, DeleteTagService deleteTagService) {
+                          EditTagService editTagService, DeleteTagService deleteTagService,
+                          TagViewMapper tagViewMapper) {
         this.tagRepo = tagRepo;
         this.addTagService = addTagService;
         this.editTagService = editTagService;
         this.deleteTagService = deleteTagService;
+        this.tagViewMapper = tagViewMapper;
     }
 
     private Id userId(Authentication auth) {
@@ -32,26 +37,21 @@ public class TagController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Map<String, String>>> listTags(Authentication auth) {
+    public ResponseEntity<List<TagRefDTO>> listTags(Authentication auth) {
         var tags = tagRepo.findAll(userId(auth));
-        return ResponseEntity.ok(tags.stream()
-            .map(t -> Map.of("id", t.data().id().value(), "name", t.data().name().value()))
-            .toList());
+        return ResponseEntity.ok(tagViewMapper.toDtos(tags));
     }
 
     @GetMapping("/paged")
-    public ResponseEntity<?> listTagsPaged(Authentication auth,
-                                            @RequestParam int page,
-                                            @RequestParam int pageSize) {
+    public ResponseEntity<PaginatedResponseDTO<TagRefDTO>> listTagsPaged(Authentication auth,
+                                                                          @RequestParam int page,
+                                                                          @RequestParam int pageSize) {
         var all = tagRepo.findAll(userId(auth));
         int start = (page - 1) * pageSize;
         int end = Math.min(start + pageSize, all.size());
-        var items = all.subList(start, end).stream()
-            .map(t -> Map.of("id", t.data().id().value(), "name", t.data().name().value()))
-            .toList();
-        return ResponseEntity.ok(Map.of(
-            "items", items, "total", all.size(),
-            "totalPages", Math.max(1, (int) Math.ceil((double) all.size() / pageSize))
+        var items = tagViewMapper.toDtos(all.subList(start, end));
+        return ResponseEntity.ok(new PaginatedResponseDTO<>(
+            items, all.size(), Math.max(1, (int) Math.ceil((double) all.size() / pageSize))
         ));
     }
 

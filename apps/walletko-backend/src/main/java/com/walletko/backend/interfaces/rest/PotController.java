@@ -4,7 +4,15 @@ import com.walletko.backend.application.pot.*;
 import com.walletko.backend.domain.pot.*;
 import com.walletko.backend.domain.shared.vo.*;
 import com.walletko.backend.infrastructure.persistence.query.DashboardQueries;
-import com.walletko.backend.interfaces.dto.*;
+import com.walletko.backend.interfaces.dto.PotWithBalanceDTO;
+import com.walletko.backend.interfaces.dto.request.AddPotRequest;
+import com.walletko.backend.interfaces.mapper.PotViewMapper;
+import com.walletko.backend.interfaces.dto.request.ArchivePotRequest;
+import com.walletko.backend.interfaces.dto.request.EditAllocationRequest;
+import com.walletko.backend.interfaces.dto.request.EditPotRequest;
+import com.walletko.backend.interfaces.dto.request.PotTransferRequest;
+import com.walletko.backend.interfaces.dto.response.IdResponse;
+import com.walletko.backend.interfaces.dto.response.TotalBalanceResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -21,12 +29,14 @@ public class PotController {
     private final EditAllocationService editAllocationService;
     private final ArchivePotService archivePotService;
     private final CreatePotTransferService createPotTransferService;
+    private final PotViewMapper potViewMapper;
 
     public PotController(PotRepository potRepo, DashboardQueries dashboardQueries,
                           AddPotService addPotService, EditPotService editPotService,
                           EditAllocationService editAllocationService,
                           ArchivePotService archivePotService,
-                          CreatePotTransferService createPotTransferService) {
+                          CreatePotTransferService createPotTransferService,
+                          PotViewMapper potViewMapper) {
         this.potRepo = potRepo;
         this.dashboardQueries = dashboardQueries;
         this.addPotService = addPotService;
@@ -34,6 +44,7 @@ public class PotController {
         this.editAllocationService = editAllocationService;
         this.archivePotService = archivePotService;
         this.createPotTransferService = createPotTransferService;
+        this.potViewMapper = potViewMapper;
     }
 
     private Id userId(Authentication auth) {
@@ -42,16 +53,8 @@ public class PotController {
 
     @GetMapping
     public ResponseEntity<List<PotWithBalanceDTO>> listPots(Authentication auth) {
-        var userId = userId(auth);
-        var snapshots = potRepo.findSnapshots(userId);
-        var dtos = snapshots.stream()
-            .map(s -> new PotWithBalanceDTO(
-                s.pot().id().value(), s.pot().name().value(),
-                s.pot().percentage().value(), s.pot().color().value(),
-                s.pot().isDefault(), s.pot().createdAt().toOffsetDateTime(),
-                s.balance().rawCents()))
-            .toList();
-        return ResponseEntity.ok(dtos);
+        var snapshots = potRepo.findSnapshots(userId(auth));
+        return ResponseEntity.ok(potViewMapper.toDtos(snapshots));
     }
 
     @GetMapping("/balance")

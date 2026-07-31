@@ -1,13 +1,13 @@
 package com.walletko.backend.interfaces.rest;
 
 import com.walletko.backend.application.auth.AuthService;
-import com.walletko.backend.domain.auth.AuthenticatedUser;
 import com.walletko.backend.interfaces.dto.AuthSessionDTO;
 import com.walletko.backend.interfaces.dto.AuthUserDTO;
-import com.walletko.backend.interfaces.dto.MessageResponse;
-import com.walletko.backend.interfaces.dto.SendOtpRequest;
 import com.walletko.backend.interfaces.dto.SessionRefDTO;
-import com.walletko.backend.interfaces.dto.VerifyOtpRequest;
+import com.walletko.backend.interfaces.dto.request.SendOtpRequest;
+import com.walletko.backend.interfaces.dto.request.VerifyOtpRequest;
+import com.walletko.backend.interfaces.dto.response.MessageResponse;
+import com.walletko.backend.interfaces.mapper.AuthViewMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -24,9 +24,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final AuthService authService;
+    private final AuthViewMapper authViewMapper;
 
-    public AuthController(AuthService authService) {
+    public AuthController(AuthService authService, AuthViewMapper authViewMapper) {
         this.authService = authService;
+        this.authViewMapper = authViewMapper;
     }
 
     @PostMapping("/email-otp/send-verification-otp")
@@ -39,7 +41,7 @@ public class AuthController {
     public ResponseEntity<AuthSessionDTO> verifyOtp(@Valid @RequestBody VerifyOtpRequest request,
                                                     HttpServletResponse response) {
         var user = authService.signInWithOtp(request.email(), request.otp(), response);
-        return ResponseEntity.ok(toAuthSession(user));
+        return ResponseEntity.ok(authViewMapper.toSession(user));
     }
 
     @PostMapping("/sign-out")
@@ -52,23 +54,15 @@ public class AuthController {
     @GetMapping("/session")
     public ResponseEntity<AuthSessionDTO> getSession(Authentication authentication) {
         return authService.currentUser(authentication)
-            .map(user -> ResponseEntity.ok(toAuthSession(user)))
+            .map(user -> ResponseEntity.ok(authViewMapper.toSession(user)))
             .orElse(ResponseEntity.ok(new AuthSessionDTO(null, null)));
     }
 
     @GetMapping("/me")
     public ResponseEntity<AuthUserDTO> me(Authentication authentication) {
         return authService.currentUser(authentication)
-            .map(user -> ResponseEntity.ok(toUser(user)))
+            .map(user -> ResponseEntity.ok(authViewMapper.toUser(user)))
             .orElse(ResponseEntity.status(401).build());
-    }
-
-    private AuthSessionDTO toAuthSession(AuthenticatedUser user) {
-        return new AuthSessionDTO(toUser(user), new SessionRefDTO(user.id().value()));
-    }
-
-    private AuthUserDTO toUser(AuthenticatedUser user) {
-        return new AuthUserDTO(user.id().value(), user.name(), user.email(), user.emailVerified());
     }
 }
 
