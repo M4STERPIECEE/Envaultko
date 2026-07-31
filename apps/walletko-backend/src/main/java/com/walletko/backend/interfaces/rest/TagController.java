@@ -3,8 +3,8 @@ package com.walletko.backend.interfaces.rest;
 import com.walletko.backend.application.tag.*;
 import com.walletko.backend.domain.shared.vo.*;
 import com.walletko.backend.domain.tag.*;
+import com.walletko.backend.interfaces.dto.AddTagRequest;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -82,6 +82,4 @@ public class TagController {
         deleteTagService.execute(new Id(id), userId(auth));
         return ResponseEntity.ok().build();
     }
-
-    public record AddTagRequest(@NotBlank String name) {}
 }

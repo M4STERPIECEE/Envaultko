@@ -4,14 +4,13 @@ import com.walletko.backend.application.expense.*;
 import com.walletko.backend.application.tag.ResolveOwnedTags;
 import com.walletko.backend.domain.expense.*;
 import com.walletko.backend.domain.shared.vo.*;
+import com.walletko.backend.interfaces.dto.DrawFromDTO;
+import com.walletko.backend.interfaces.dto.PayExpenseRequest;
+import com.walletko.backend.interfaces.dto.UpdateExpenseRequest;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.Positive;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -94,17 +93,4 @@ public class ExpenseController {
             .toList();
         return ResponseEntity.ok(Map.of("allocations", allocs));
     }
-
-    public record PayExpenseRequest(
-        @NotBlank String name, List<TagInput> tags,
-        @NotEmpty List<DrawFromDto> drawFrom,
-        java.time.OffsetDateTime createdAt
-    ) {}
-    public record DrawFromDto(@NotBlank String potId, @Positive long amount) {}
-    public record TagInput(String id, @NotBlank String name) {}
-    public record UpdateExpenseRequest(
-        @NotBlank String name, @NotNull java.time.OffsetDateTime date,
-        List<TagInput> tags
-    ) {}
-    private @interface NotNull {}
 }
