@@ -6,13 +6,12 @@ import com.walletko.backend.domain.income.*;
 import com.walletko.backend.domain.shared.vo.*;
 import com.walletko.backend.infrastructure.persistence.query.DashboardQueries;
 import com.walletko.backend.infrastructure.persistence.query.TransactionQueries;
+import com.walletko.backend.interfaces.dto.ReceiveIncomeRequest;
+import com.walletko.backend.interfaces.dto.UpdateIncomeRequest;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Positive;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -106,16 +105,4 @@ public class IncomeController {
             .toList();
         return ResponseEntity.ok(Map.of("allocations", allocs));
     }
-
-    public record ReceiveIncomeRequest(
-        @NotBlank String name, @Positive long amount,
-        List<TagInput> tags,
-        java.time.OffsetDateTime createdAt
-    ) {}
-    public record TagInput(String id, @NotBlank String name) {}
-    public record UpdateIncomeRequest(
-        @NotBlank String name, @NotNull java.time.OffsetDateTime date,
-        List<TagInput> tags
-    ) {}
-    private @interface NotNull {}
 }

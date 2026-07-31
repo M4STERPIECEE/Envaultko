@@ -4,9 +4,8 @@ import com.walletko.backend.application.pot.*;
 import com.walletko.backend.domain.pot.*;
 import com.walletko.backend.domain.shared.vo.*;
 import com.walletko.backend.infrastructure.persistence.query.DashboardQueries;
-import com.walletko.backend.interfaces.dto.PotWithBalanceDTO;
+import com.walletko.backend.interfaces.dto.*;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -60,7 +59,6 @@ public class PotController {
         var total = dashboardQueries.computeTotalBalance(userId(auth).value());
         return ResponseEntity.ok(new TotalBalanceResponse(total));
     }
-    public record TotalBalanceResponse(long totalBalance) {}
 
     @PostMapping
     public ResponseEntity<IdResponse> addPot(Authentication auth,
@@ -107,23 +105,10 @@ public class PotController {
 
     @PostMapping("/transfer")
     public ResponseEntity<Void> transfer(Authentication auth,
-                                          @Valid @RequestBody TransferRequest req) {
+                                          @Valid @RequestBody PotTransferRequest req) {
         createPotTransferService.execute(
             new Id(req.fromPotId()), new Id(req.toPotId()),
             Money.fromCents(req.amount()), userId(auth));
         return ResponseEntity.ok().build();
     }
-
-    public record AddPotRequest(
-        @NotBlank String name, @NotBlank String color,
-        @Min(1) @Max(99) int percentage,
-        @NotEmpty List<OtherPotDto> otherPots
-    ) {}
-    public record OtherPotDto(@NotBlank String id, @Min(1) int percentage) {}
-    public record EditPotRequest(@NotBlank String name, @NotBlank String color) {}
-    public record EditAllocationRequest(@NotEmpty List<PotAllocDto> allPots) {}
-    public record PotAllocDto(@NotBlank String id, @Min(1) int percentage) {}
-    public record ArchivePotRequest(String toPotId, @NotEmpty List<PotAllocDto> remainingPotsPercentages) {}
-    public record TransferRequest(@NotBlank String fromPotId, @NotBlank String toPotId, @Positive long amount) {}
-    public record IdResponse(String id) {}
 }

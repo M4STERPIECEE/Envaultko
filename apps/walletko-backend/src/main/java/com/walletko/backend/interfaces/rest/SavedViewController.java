@@ -4,8 +4,8 @@ import com.walletko.backend.application.savedview.*;
 import com.walletko.backend.domain.savedview.*;
 import com.walletko.backend.domain.shared.vo.*;
 import com.walletko.backend.infrastructure.persistence.query.ViewQueries;
+import com.walletko.backend.interfaces.dto.UpsertViewRequest;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -119,9 +119,4 @@ public class SavedViewController {
         deleteViewService.execute(new Id(id), userId(auth));
         return ResponseEntity.ok().build();
     }
-
-    public record UpsertViewRequest(
-        @NotBlank String name, String description,
-        String nameFilter, List<String> tagIds
-    ) {}
 }
