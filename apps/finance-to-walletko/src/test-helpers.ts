@@ -11,7 +11,7 @@ const FINANCE_SCHEMA_PATH = fileURLToPath(
 
 const WALLETKO_MIGRATIONS_DIR = fileURLToPath(
   new URL(
-    "../../walletko/src/server/infrastructure/db/migrations",
+    "../../envaultko/src/server/infrastructure/db/migrations",
     import.meta.url,
   ),
 );
