@@ -124,27 +124,28 @@ export function TransactionsPage() {
   };
 
   return (
-    <PageContent>
+    <PageContent className="space-y-8 pb-12">
       <PageHeader
+        eyebrow="History & Ledger"
         title="Transactions"
         action={
           <PageActions
             primary={{
               key: "add",
-              label: "Add",
+              label: "New Transaction",
               icon: <PlusIcon className="size-4" />,
               onClick: () => {},
               items: [
                 {
                   key: "income",
-                  label: "Income",
-                  icon: <ArrowDownLeft className="size-4" />,
+                  label: "Add Income",
+                  icon: <ArrowDownLeft className="size-4 text-emerald-500" />,
                   onClick: () => setAddIncomeOpen(true),
                 },
                 {
                   key: "expense",
-                  label: "Expense",
-                  icon: <ArrowUpRight className="size-4" />,
+                  label: "Add Expense",
+                  icon: <ArrowUpRight className="size-4 text-rose-500" />,
                   onClick: () => setAddExpenseOpen(true),
                 },
               ],
@@ -154,7 +155,7 @@ export function TransactionsPage() {
       />
 
       {/* Filter bar */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
         <InputGroup className="w-full sm:max-w-xs">
           <InputGroupAddon>
             <span className="flex size-6 items-center justify-center rounded-full bg-muted text-muted-foreground">
@@ -187,18 +188,21 @@ export function TransactionsPage() {
             onValueChange={handleTypeChange}
             variant="outline"
           >
-            <ToggleGroupItem value="income" className="cursor-pointer">
+            <ToggleGroupItem value="income" className="cursor-pointer text-xs">
               Income
             </ToggleGroupItem>
-            <ToggleGroupItem value="expense" className="cursor-pointer">
+            <ToggleGroupItem value="expense" className="cursor-pointer text-xs">
               Expense
             </ToggleGroupItem>
-            <ToggleGroupItem value="canceled_income" className="cursor-pointer">
+            <ToggleGroupItem
+              value="canceled_income"
+              className="cursor-pointer text-xs"
+            >
               Cancelled
             </ToggleGroupItem>
             <ToggleGroupItem
               value="income_cancellation"
-              className="cursor-pointer"
+              className="cursor-pointer text-xs"
             >
               Cancellations
             </ToggleGroupItem>
@@ -207,7 +211,7 @@ export function TransactionsPage() {
           <DropdownMenu>
             <DropdownMenuTrigger
               className={cn(
-                "inline-flex items-center gap-1.5 h-8 px-3 text-sm font-medium rounded-lg border border-input bg-transparent",
+                "inline-flex items-center gap-1.5 h-8 px-3 text-xs font-medium rounded-lg border border-input bg-transparent",
                 "cursor-pointer hover:bg-muted transition-colors duration-150",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
               )}
@@ -229,7 +233,7 @@ export function TransactionsPage() {
                   key={tag.id}
                   checked={selectedTagIds.includes(tag.id)}
                   onCheckedChange={() => toggleTag(tag.id)}
-                  className="cursor-pointer"
+                  className="cursor-pointer text-xs"
                 >
                   {tag.name}
                 </DropdownMenuCheckboxItem>
@@ -288,7 +292,7 @@ export function TransactionsPage() {
             Clear all
           </Button>
         )}
-        <span className="ml-auto text-xs text-muted-foreground tabular-nums">
+        <span className="ml-auto text-xs font-semibold text-muted-foreground tabular-nums uppercase tracking-wider">
           {total} {total === 1 ? "entry" : "entries"}
         </span>
       </div>
@@ -317,10 +321,10 @@ export function TransactionsPage() {
         <DataList
           header={
             <>
-              <div className="size-8 shrink-0" />
+              <div className="size-9 shrink-0" />
               <DataListHead className="flex-1">Description</DataListHead>
-              <DataListHead className="w-16 text-right">Date</DataListHead>
-              <DataListHead className="w-24 text-right">Amount</DataListHead>
+              <DataListHead className="w-20 text-right">Date</DataListHead>
+              <DataListHead className="w-28 text-right">Amount</DataListHead>
               <div className="size-8 shrink-0" />
             </>
           }

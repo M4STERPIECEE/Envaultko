@@ -1,5 +1,5 @@
 import type { ComponentProps } from "react";
-import { useFieldContext } from "src/shared/form/form-setup";
+import { useFieldContext } from "src/shared/form/form-context";
 import { useFormatError } from "src/shared/lib/use-format-error";
 import { AutocompleteInput } from "src/shared/ui/autocomplete-input";
 import { FormField } from "src/shared/ui/form-field";
