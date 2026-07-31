@@ -1,22 +1,10 @@
 import { keepPreviousData, queryOptions } from "@tanstack/react-query";
-import type {
-  SuggestibleTransactionType,
-  TransactionDTO,
-} from "src/server/contracts/transaction";
-import {
-  getExpenseCancelPreviewFn,
-  getExpenseFn,
-} from "src/server/functions/expense.fn";
-import {
-  getIncomeCancelPreviewFn,
-  getIncomeFn,
-} from "src/server/functions/income.fn";
-import {
-  listTransactionsFn,
-  searchNameSuggestionsFn,
-} from "src/server/functions/transactions.fn";
 
-type TransactionTypeValue = TransactionDTO["type"];
+type SuggestibleTransactionType = "income" | "expense";
+
+import { expenseApi } from "src/shared/api/expense";
+import { incomeApi } from "src/shared/api/income";
+import { transactionsApi } from "src/shared/api/transactions";
 
 type TransactionFilters = {
   types: string[];
@@ -43,36 +31,36 @@ export const transactionsQuery = (filters: TransactionFilters) =>
   queryOptions({
     queryKey: transactionKeys.list(filters),
     queryFn: () =>
-      listTransactionsFn({
-        data: {
-          ...filters,
-          types: filters.types as TransactionTypeValue[],
-        },
+      transactionsApi.list({
+        types: filters.types.length > 0 ? filters.types : undefined,
+        name: filters.name || undefined,
+        tagIds: filters.tagIds.length > 0 ? filters.tagIds : undefined,
+        page: filters.page,
       }),
   });
 
 export const incomeQuery = (id: string) =>
   queryOptions({
     queryKey: transactionKeys.income(id),
-    queryFn: () => getIncomeFn({ data: { id } }),
+    queryFn: () => incomeApi.get(id),
   });
 
 export const expenseQuery = (id: string) =>
   queryOptions({
     queryKey: transactionKeys.expense(id),
-    queryFn: () => getExpenseFn({ data: { id } }),
+    queryFn: () => expenseApi.get(id),
   });
 
 export const expenseCancelPreviewQuery = (id: string) =>
   queryOptions({
     queryKey: transactionKeys.expenseCancelPreview(id),
-    queryFn: () => getExpenseCancelPreviewFn({ data: { id } }),
+    queryFn: () => expenseApi.getCancelPreview(id),
   });
 
 export const incomeCancelPreviewQuery = (id: string) =>
   queryOptions({
     queryKey: transactionKeys.incomeCancelPreview(id),
-    queryFn: () => getIncomeCancelPreviewFn({ data: { id } }),
+    queryFn: () => incomeApi.getCancelPreview(id),
   });
 
 export const nameSuggestionsQuery = (
@@ -81,7 +69,7 @@ export const nameSuggestionsQuery = (
 ) =>
   queryOptions({
     queryKey: transactionKeys.nameSuggestions(type, search),
-    queryFn: () => searchNameSuggestionsFn({ data: { type, search } }),
+    queryFn: () => transactionsApi.searchNameSuggestions(type, search),
     placeholderData: keepPreviousData,
     staleTime: 30_000,
     retry: false,

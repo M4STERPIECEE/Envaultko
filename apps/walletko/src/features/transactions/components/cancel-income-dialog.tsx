@@ -1,12 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { dashboardKeys } from "src/features/dashboard/queries";
-import { potKeys } from "src/features/pots/queries";
+import { potKeys, potsQuery } from "src/features/pots/queries";
 import {
   incomeCancelPreviewQuery,
   transactionKeys,
 } from "src/features/transactions/queries";
-import { cancelIncomeFn } from "src/server/functions/income.fn";
-import { useFormatCurrency } from "src/shared/hooks/use-format-currency";
+import { incomeApi } from "src/shared/api/income";
 import { Alert, AlertDescription } from "src/shared/ui/alert";
 import { Button } from "src/shared/ui/button";
 import {
@@ -20,15 +19,6 @@ import {
 import { Money } from "src/shared/ui/money";
 import { Spinner } from "src/shared/ui/spinner";
 
-type PreviewLine = {
-  potId: string;
-  potName: string;
-  amount: number;
-  resultingBalance: number | null;
-  status: "ok" | "shortfall" | "pot_archived";
-  shortfall: number;
-};
-
 type CancelIncomeDialogProps = {
   income: { id: string; name: string } | null;
   onOpenChange: (open: boolean) => void;
@@ -39,7 +29,6 @@ export function CancelIncomeDialog({
   onOpenChange,
 }: CancelIncomeDialogProps) {
   const qc = useQueryClient();
-  const { formatFromCent } = useFormatCurrency();
 
   const {
     data: preview,
@@ -50,8 +39,10 @@ export function CancelIncomeDialog({
     enabled: income !== null,
   });
 
+  const { data: pots } = useQuery(potsQuery);
+
   const mutation = useMutation({
-    mutationFn: cancelIncomeFn,
+    mutationFn: (args: { id: string }) => incomeApi.cancel(args.id),
     onSuccess: (result) => {
       if (result.blocked) {
         if (income) {
@@ -73,9 +64,16 @@ export function CancelIncomeDialog({
     onOpenChange(false);
   };
 
+  const potNameMap = new Map((pots ?? []).map((p) => [p.id, p.name]));
+
+  const previewLines = (preview?.allocations ?? []).map(
+    (alloc: { potId: string; amount: number }) => {
+      const name = potNameMap.get(alloc.potId) ?? alloc.potId;
+      return { potId: alloc.potId, potName: name, amount: alloc.amount };
+    },
+  );
+
   const previewReady = !isLoading && !isError && preview != null;
-  const blocked = previewReady && preview.blocked;
-  const raceBlocked = mutation.data?.blocked === true;
 
   return (
     <Dialog open={income !== null} onOpenChange={(v) => !v && handleClose()}>
@@ -100,7 +98,7 @@ export function CancelIncomeDialog({
         ) : (
           <div className="space-y-2">
             <ul className="divide-y rounded-md border">
-              {preview.lines.map((line) => (
+              {previewLines.map((line) => (
                 <li
                   key={line.potId}
                   className="flex items-center justify-between gap-2 px-3 py-2 text-sm"
@@ -110,27 +108,18 @@ export function CancelIncomeDialog({
                     <span className="font-medium text-destructive">
                       −<Money value={line.amount} />
                     </span>
-                    {resultText(line)}
+                    {resultText()}
                   </span>
                 </li>
               ))}
             </ul>
-            {blocked && (
-              <Alert variant="destructive">
-                <AlertDescription>
-                  {blockMessage(preview.lines, formatFromCent)}
-                </AlertDescription>
-              </Alert>
-            )}
           </div>
         )}
 
-        {(mutation.isError || raceBlocked) && (
+        {mutation.isError && (
           <Alert variant="destructive">
             <AlertDescription>
-              {raceBlocked
-                ? "This income can no longer be cancelled — a pot would go negative. Please review and try again."
-                : "Something went wrong. Please try again."}
+              Something went wrong. Please try again.
             </AlertDescription>
           </Alert>
         )}
@@ -145,12 +134,8 @@ export function CancelIncomeDialog({
           </Button>
           <Button
             variant="destructive"
-            onClick={() =>
-              income && mutation.mutate({ data: { id: income.id } })
-            }
-            disabled={
-              mutation.isPending || !previewReady || blocked || raceBlocked
-            }
+            onClick={() => income && mutation.mutate({ id: income.id })}
+            disabled={mutation.isPending || !previewReady}
           >
             {mutation.isPending ? "Cancelling…" : "Cancel income"}
           </Button>
@@ -160,39 +145,4 @@ export function CancelIncomeDialog({
   );
 }
 
-const resultText = (line: PreviewLine) => {
-  if (line.status === "pot_archived") {
-    return (
-      <span className="text-destructive">pot archived — can’t reclaim ⚠</span>
-    );
-  }
-  const negative = line.status === "shortfall";
-  return (
-    <span className={negative ? "text-destructive" : "text-muted-foreground"}>
-      → <Money value={line.resultingBalance ?? 0} />
-      {negative ? " ⚠" : " left"}
-    </span>
-  );
-};
-
-const blockMessage = (
-  lines: PreviewLine[],
-  formatFromCent: (cents: number) => string,
-): string => {
-  const bad = lines.filter((l) => l.status !== "ok");
-  if (bad.length === 1) {
-    const l = bad[0];
-    if (l.status === "pot_archived") {
-      return `Can't cancel — "${l.potName}" was archived, so its money was moved and can't be reclaimed.`;
-    }
-    return `Can't cancel — "${l.potName}" would go negative by ${formatFromCent(l.shortfall)}. You've already spent income allocated to it. Free up that pot first.`;
-  }
-  const list = bad
-    .map((l) =>
-      l.status === "pot_archived"
-        ? `"${l.potName}" (archived)`
-        : `"${l.potName}" (${formatFromCent(l.shortfall)})`,
-    )
-    .join(", ");
-  return `Can't cancel — these pots block it: ${list}. Free them up first.`;
-};
+const resultText = () => <span className="text-muted-foreground">removed</span>;

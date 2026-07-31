@@ -1,9 +1,5 @@
 import { queryOptions } from "@tanstack/react-query";
-import {
-  getOverviewStatsFn,
-  getYearStatsFn,
-  listTopPotsFn,
-} from "src/server/functions/dashboard.fn";
+import { dashboardApi } from "src/shared/api/dashboard";
 
 export const dashboardKeys = {
   all: ["dashboard"] as const,
@@ -16,17 +12,17 @@ export const dashboardKeys = {
 
 export const overviewStatsQuery = queryOptions({
   queryKey: dashboardKeys.overview(),
-  queryFn: () => getOverviewStatsFn(),
+  queryFn: () => dashboardApi.overview(),
 });
 
 export const topPotsQuery = (limit = 4) =>
   queryOptions({
     queryKey: dashboardKeys.topPots(limit),
-    queryFn: () => listTopPotsFn({ data: { limit } }),
+    queryFn: () => dashboardApi.topPots(limit),
   });
 
 export const yearStatsQuery = (year: number) =>
   queryOptions({
     queryKey: dashboardKeys.yearStats(year),
-    queryFn: () => getYearStatsFn({ data: { year } }),
+    queryFn: () => dashboardApi.yearStats(year),
   });

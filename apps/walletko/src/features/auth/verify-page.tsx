@@ -2,8 +2,8 @@ import { getRouteApi, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 import { useEffect, useState } from "react";
 import { AuthShell } from "src/features/auth/components/auth-shell";
+import { authApi } from "src/shared/api/auth";
 import { useAppForm } from "src/shared/form/form-setup";
-import { authClient } from "src/shared/lib/auth-client";
 import { z } from "zod";
 
 const routeApi = getRouteApi("/login_/verify");
@@ -31,13 +31,15 @@ export function VerifyPage() {
     validators: { onSubmit: verifySchema },
     onSubmit: async ({ value }) => {
       setServerError(null);
-      const { error } = await authClient.signIn.emailOtp({
-        email: email ?? "",
-        otp: value.otp,
-      });
-      if (error) {
+      try {
+        await authApi.signIn(email ?? "", value.otp);
+      } catch (err) {
         form.setFieldValue("otp", "");
-        setServerError(error.message ?? "Invalid code. Please try again.");
+        setServerError(
+          err instanceof Error
+            ? err.message
+            : "Invalid code. Please try again.",
+        );
         return;
       }
       await navigate({ to: "/" });
@@ -46,7 +48,7 @@ export function VerifyPage() {
 
   const handleResend = async () => {
     if (cooldown > 0 || !email) return;
-    await authClient.emailOtp.sendVerificationOtp({ email, type: "sign-in" });
+    await authApi.sendOtp(email);
     setCooldown(RESEND_COOLDOWN);
     setServerError(null);
   };

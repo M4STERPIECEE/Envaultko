@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { ChevronRightIcon, PencilIcon, Trash2Icon } from "lucide-react";
 import { viewStatsQuery } from "src/features/views/queries";
-import type { SavedViewListItem } from "src/server/contracts/saved-view";
+import type { SavedViewDTO } from "src/shared/api/views";
 import { Badge } from "src/shared/ui/badge";
 import {
   Card,
@@ -23,7 +23,7 @@ import { RowActions } from "src/shared/ui/row-actions";
 function ViewStatsPreview({ viewId }: { viewId: string }) {
   const { data: stats } = useQuery(viewStatsQuery(viewId));
   if (!stats) return <span className="text-muted-foreground text-sm">—</span>;
-  const isPositive = stats.netBalance >= 0;
+  const isPositive = stats.balance >= 0;
   return (
     <span
       className={
@@ -32,16 +32,16 @@ function ViewStatsPreview({ viewId }: { viewId: string }) {
           : "text-destructive font-semibold text-sm"
       }
     >
-      <Money value={stats.netBalance} />
+      <Money value={stats.balance} />
     </span>
   );
 }
 
 export type ViewCardProps = {
-  view: SavedViewListItem;
+  view: SavedViewDTO;
   tagNames: Record<string, string>;
-  onEdit: (view: SavedViewListItem) => void;
-  onDelete: (view: SavedViewListItem) => void;
+  onEdit: (view: SavedViewDTO) => void;
+  onDelete: (view: SavedViewDTO) => void;
 };
 
 export function ViewCard({ view, tagNames, onEdit, onDelete }: ViewCardProps) {

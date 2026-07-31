@@ -1,7 +1,7 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { CheckCircle2 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { updateUserNameFn } from "src/server/functions/user.fn";
+import { userApi } from "src/shared/api/user";
 import { useAppForm } from "src/shared/form/form-setup";
 import { useAuthenticatedUser } from "src/shared/hooks/use-authenticated-user";
 import { PageContent, PageHeader } from "src/shared/layout/page";
@@ -36,7 +36,7 @@ function SettingsPage() {
     onSubmit: async ({ value }) => {
       setServerError(null);
       try {
-        await updateUserNameFn({ data: value });
+        await userApi.updateName(value);
         setShowSaved(true);
         router.invalidate();
       } catch {

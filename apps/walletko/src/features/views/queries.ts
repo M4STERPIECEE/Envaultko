@@ -1,10 +1,5 @@
 import { queryOptions } from "@tanstack/react-query";
-import {
-  getViewFn,
-  getViewStatsFn,
-  getViewYearStatsFn,
-  listViewsFn,
-} from "src/server/functions/views.fn";
+import { viewsApi } from "src/shared/api/views";
 
 export const viewKeys = {
   all: ["views"] as const,
@@ -19,23 +14,23 @@ export const viewKeys = {
 
 export const viewsQuery = queryOptions({
   queryKey: viewKeys.list(),
-  queryFn: () => listViewsFn(),
+  queryFn: () => viewsApi.list(),
 });
 
 export const viewQuery = (id: string) =>
   queryOptions({
     queryKey: viewKeys.detail(id),
-    queryFn: () => getViewFn({ data: { id } }),
+    queryFn: () => viewsApi.get(id),
   });
 
 export const viewStatsQuery = (id: string) =>
   queryOptions({
     queryKey: viewKeys.stats(id),
-    queryFn: () => getViewStatsFn({ data: { id } }),
+    queryFn: () => viewsApi.getStats(id),
   });
 
 export const viewYearStatsQuery = (id: string, year: number) =>
   queryOptions({
     queryKey: viewKeys.yearStats(id, year),
-    queryFn: () => getViewYearStatsFn({ data: { id, year } }),
+    queryFn: () => viewsApi.getYearStats(id, year),
   });

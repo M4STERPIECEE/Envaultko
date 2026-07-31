@@ -2,7 +2,7 @@ import { TanStackDevtools } from "@tanstack/react-devtools";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
-import { getAppMetaFn } from "src/server/functions/app-meta.fn";
+import { metaApi } from "src/shared/api/meta";
 import { NotFound } from "src/shared/components/not-found";
 import { queryClient } from "src/shared/lib/query-client";
 
@@ -10,7 +10,8 @@ import appCss from "../styles.css?url";
 
 export const Route = createRootRoute({
   notFoundComponent: NotFound,
-  loader: () => getAppMetaFn(),
+  loader: () =>
+    metaApi.get().catch(() => ({ version: "dev", releaseDate: null })),
   head: () => ({
     meta: [
       { charSet: "utf-8" },

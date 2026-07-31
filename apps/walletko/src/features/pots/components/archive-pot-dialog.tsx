@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useId, useMemo, useState } from "react";
 import { potsQuery, totalBalanceQuery } from "src/features/pots/queries";
-import { archivePotFn } from "src/server/functions/pots.fn";
+import { potsApi } from "src/shared/api/pots";
 import type { ModalAllocation } from "src/shared/components/allocation-disc";
 import { useAppForm } from "src/shared/form/form-setup";
 import { Alert, AlertDescription } from "src/shared/ui/alert";
@@ -69,7 +69,15 @@ export function ArchivePotDialog({ open, onClose, pot, remainingPots }: Props) {
   }));
 
   const mutation = useMutation({
-    mutationFn: archivePotFn,
+    mutationFn: (args: {
+      potId: string;
+      toPotId?: string;
+      remainingPotsPercentages: Array<{ id: string; percentage: number }>;
+    }) =>
+      potsApi.archive(args.potId, {
+        toPotId: args.toPotId,
+        remainingPotsPercentages: args.remainingPotsPercentages,
+      }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: potsQuery.queryKey });
       qc.invalidateQueries({ queryKey: totalBalanceQuery.queryKey });
@@ -94,14 +102,12 @@ export function ArchivePotDialog({ open, onClose, pot, remainingPots }: Props) {
     },
     onSubmit: ({ value }) => {
       mutation.mutate({
-        data: {
-          potId: pot.id,
-          toPotId: needsTransfer ? value.toPotId : undefined,
-          remainingPotsPercentages: value.percentages.map((p) => ({
-            id: p.id,
-            percentage: p.percentage,
-          })),
-        },
+        potId: pot.id,
+        toPotId: needsTransfer ? value.toPotId : undefined,
+        remainingPotsPercentages: value.percentages.map((p) => ({
+          id: p.id,
+          percentage: p.percentage,
+        })),
       });
     },
   });

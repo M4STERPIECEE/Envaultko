@@ -14,9 +14,9 @@ import {
   tagKeys,
   tagsPagedQuery,
 } from "src/features/tags/queries";
-import { deleteTagFn } from "src/server/functions/tags.fn";
+import type { TagDTO } from "src/shared/api/tags";
+import { tagsApi } from "src/shared/api/tags";
 import { PageContent, PageHeader } from "src/shared/layout/page";
-import { Badge } from "src/shared/ui/badge";
 import { ConfirmDeleteDialog } from "src/shared/ui/confirm-delete-dialog";
 import { DataList, DataListHead, DataListRow } from "src/shared/ui/data-list";
 import { DropdownMenuItem } from "src/shared/ui/dropdown-menu";
@@ -26,7 +26,7 @@ import { PageActions } from "src/shared/ui/page-actions";
 import { Pagination } from "src/shared/ui/pagination";
 import { RowActions } from "src/shared/ui/row-actions";
 
-type TagListItem = { id: string; name: string; count: number };
+type TagListItem = TagDTO;
 
 export function TagsPage() {
   const [page, setPage] = useState(1);
@@ -41,7 +41,8 @@ export function TagsPage() {
   });
 
   const deleteTagMutation = useMutation({
-    mutationFn: deleteTagFn,
+    mutationFn: (args: { data: { id: string } }) =>
+      tagsApi.delete(args.data.id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: tagKeys.all });
       setDeletingTag(null);
@@ -86,7 +87,6 @@ export function TagsPage() {
           header={
             <>
               <DataListHead className="flex-1">Tag</DataListHead>
-              <DataListHead className="w-16 text-right">Uses</DataListHead>
               <div className="size-8 shrink-0" />
             </>
           }
@@ -96,14 +96,7 @@ export function TagsPage() {
               <span className="flex-1 truncate text-sm font-medium">
                 {tag.name}
               </span>
-              <div className="flex w-16 justify-end">
-                <Badge
-                  variant="secondary"
-                  className="shrink-0 text-xs tabular-nums"
-                >
-                  {tag.count}
-                </Badge>
-              </div>
+
               <RowActions label={`Actions for ${tag.name}`}>
                 <DropdownMenuItem
                   className="cursor-pointer gap-2"
@@ -112,16 +105,14 @@ export function TagsPage() {
                   <PencilIcon className="size-4" />
                   Edit
                 </DropdownMenuItem>
-                {tag.count === 0 && (
-                  <DropdownMenuItem
-                    className="cursor-pointer gap-2"
-                    variant="destructive"
-                    onClick={() => setDeletingTag(tag)}
-                  >
-                    <Trash2Icon className="size-4" />
-                    Delete
-                  </DropdownMenuItem>
-                )}
+                <DropdownMenuItem
+                  className="cursor-pointer gap-2"
+                  variant="destructive"
+                  onClick={() => setDeletingTag(tag)}
+                >
+                  <Trash2Icon className="size-4" />
+                  Delete
+                </DropdownMenuItem>
               </RowActions>
             </DataListRow>
           ))}

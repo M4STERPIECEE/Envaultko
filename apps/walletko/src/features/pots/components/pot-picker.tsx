@@ -1,6 +1,6 @@
 import { Plus } from "lucide-react";
 import { useState } from "react";
-import type { PotWithBalanceDTO } from "src/server/contracts/pot";
+import type { PotWithBalanceDTO } from "src/shared/api/pots";
 import { Button } from "src/shared/ui/button";
 import {
   Command,

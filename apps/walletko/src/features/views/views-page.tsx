@@ -10,8 +10,7 @@ import { CreateViewDialog } from "src/features/views/components/create-view-dial
 import { EditViewDialog } from "src/features/views/components/edit-view-dialog";
 import { ViewCard } from "src/features/views/components/view-card";
 import { viewKeys, viewsQuery } from "src/features/views/queries";
-import type { SavedViewListItem } from "src/server/contracts/saved-view";
-import { deleteViewFn } from "src/server/functions/views.fn";
+import { type SavedViewDTO, viewsApi } from "src/shared/api/views";
 import { PageContent, PageHeader } from "src/shared/layout/page";
 import { ConfirmDeleteDialog } from "src/shared/ui/confirm-delete-dialog";
 import { EmptyState } from "src/shared/ui/empty-state";
@@ -19,12 +18,8 @@ import { PageActions } from "src/shared/ui/page-actions";
 
 export function ViewsPage() {
   const [createOpen, setCreateOpen] = useState(false);
-  const [editingView, setEditingView] = useState<SavedViewListItem | null>(
-    null,
-  );
-  const [deletingView, setDeletingView] = useState<SavedViewListItem | null>(
-    null,
-  );
+  const [editingView, setEditingView] = useState<SavedViewDTO | null>(null);
+  const [deletingView, setDeletingView] = useState<SavedViewDTO | null>(null);
 
   const qc = useQueryClient();
   const { data: views } = useSuspenseQuery(viewsQuery);
@@ -35,7 +30,8 @@ export function ViewsPage() {
   );
 
   const deleteMutation = useMutation({
-    mutationFn: deleteViewFn,
+    mutationFn: (args: { data: { id: string } }) =>
+      viewsApi.delete(args.data.id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: viewKeys.list() });
       setDeletingView(null);

@@ -122,7 +122,7 @@ export function DashboardPage() {
           {visible.has("monthIncome") && (
             <StatCard
               label="Income this month"
-              value={overview.monthIncome}
+              value={overview.monthlyIncome}
               variant="income"
               className="lg:col-span-2"
             />
@@ -130,7 +130,7 @@ export function DashboardPage() {
           {visible.has("monthExpense") && (
             <StatCard
               label="Expenses this month"
-              value={overview.monthExpense}
+              value={overview.monthlyExpense}
               variant="expense"
               className="lg:col-span-2"
             />
@@ -189,9 +189,9 @@ export function DashboardPage() {
       {/* Yearly chart */}
       {yearStats && (
         <YearlyChart
-          data={yearStats.months}
+          data={yearStats}
           year={selectedYear}
-          availableYears={yearStats.availableYears}
+          availableYears={[selectedYear - 1, selectedYear, selectedYear + 1]}
           onYearChange={setSelectedYear}
         />
       )}

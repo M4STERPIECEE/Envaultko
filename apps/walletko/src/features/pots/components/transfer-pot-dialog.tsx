@@ -7,8 +7,7 @@ import { ChevronDown } from "lucide-react";
 import { useEffect, useId, useState } from "react";
 import { dashboardKeys } from "src/features/dashboard/queries";
 import { potsQuery } from "src/features/pots/queries";
-import type { PotWithBalanceDTO } from "src/server/contracts/pot";
-import { createPotTransferFn } from "src/server/functions/pots.fn";
+import { type PotWithBalanceDTO, potsApi } from "src/shared/api/pots";
 import { useAppForm } from "src/shared/form/form-setup";
 import { useFormatError } from "src/shared/lib/use-format-error";
 import { Alert, AlertDescription } from "src/shared/ui/alert";
@@ -61,7 +60,7 @@ export function TransferPotDialog({
   const formatError = useFormatError();
 
   const mutation = useMutation({
-    mutationFn: createPotTransferFn,
+    mutationFn: potsApi.transfer,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: potsQuery.queryKey });
       qc.invalidateQueries({ queryKey: dashboardKeys.all });
@@ -79,11 +78,9 @@ export function TransferPotDialog({
     validators: { onSubmit: transferPotSchema },
     onSubmit: ({ value }) =>
       mutation.mutate({
-        data: {
-          fromPotId: value.fromPotId,
-          toPotId: value.toPotId,
-          amount: value.amount,
-        },
+        fromPotId: value.fromPotId,
+        toPotId: value.toPotId,
+        amount: value.amount,
       }),
   });
 

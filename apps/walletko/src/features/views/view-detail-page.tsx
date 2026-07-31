@@ -18,7 +18,7 @@ import {
   viewStatsQuery,
   viewYearStatsQuery,
 } from "src/features/views/queries";
-import { deleteViewFn } from "src/server/functions/views.fn";
+import { viewsApi } from "src/shared/api/views";
 import {
   STAT_KEYS,
   useStatVisibility,
@@ -49,7 +49,8 @@ export function ViewDetailPage() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const deleteMutation = useMutation({
-    mutationFn: deleteViewFn,
+    mutationFn: (args: { data: { id: string } }) =>
+      viewsApi.delete(args.data.id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: viewKeys.list() });
       navigate({ to: "/views" });
@@ -164,30 +165,14 @@ export function ViewDetailPage() {
           {visible.has("totalBalance") && (
             <StatCard
               label="Net Balance"
-              value={stats.netBalance}
+              value={stats.balance}
               className="md:col-span-2"
-            />
-          )}
-          {visible.has("monthIncome") && (
-            <StatCard
-              label="Income this month"
-              value={stats.monthIncome}
-              variant="income"
-              className="lg:col-span-2"
-            />
-          )}
-          {visible.has("monthExpense") && (
-            <StatCard
-              label="Expenses this month"
-              value={stats.monthExpense}
-              variant="expense"
-              className="lg:col-span-2"
             />
           )}
           {visible.has("allTimeIncome") && (
             <StatCard
-              label="All Time Income"
-              value={stats.allTimeIncome}
+              label="Total Income"
+              value={stats.totalIncome}
               human
               variant="income"
               className="lg:col-span-2"
@@ -195,8 +180,8 @@ export function ViewDetailPage() {
           )}
           {visible.has("allTimeExpense") && (
             <StatCard
-              label="All Time Expense"
-              value={stats.allTimeExpense}
+              label="Total Expense"
+              value={stats.totalExpense}
               human
               variant="expense"
               className="lg:col-span-2"
@@ -208,9 +193,9 @@ export function ViewDetailPage() {
       {/* Yearly chart */}
       {yearStats && (
         <YearlyChart
-          data={yearStats.months}
+          data={yearStats ?? []}
           year={selectedYear}
-          availableYears={yearStats.availableYears}
+          availableYears={[selectedYear - 1, selectedYear, selectedYear + 1]}
           onYearChange={setSelectedYear}
         />
       )}

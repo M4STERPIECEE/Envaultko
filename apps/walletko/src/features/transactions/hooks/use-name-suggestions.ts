@@ -1,7 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { nameSuggestionsQuery } from "src/features/transactions/queries";
-import type { SuggestibleTransactionType } from "src/server/contracts/transaction";
+
+type SuggestibleTransactionType = "income" | "expense";
+
 import { useDebouncedValue } from "src/shared/hooks/use-debounced-value";
 
 type UseNameSuggestionsOptions = {

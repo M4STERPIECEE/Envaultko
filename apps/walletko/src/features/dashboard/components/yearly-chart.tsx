@@ -11,7 +11,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import type { MonthStatDTO } from "src/server/contracts/dashboard";
+import type { MonthStatDTO } from "src/shared/api/dashboard";
 import {
   humanizeFromCent,
   useFormatCurrency,

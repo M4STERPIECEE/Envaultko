@@ -1,5 +1,5 @@
 import { queryOptions } from "@tanstack/react-query";
-import { getTotalBalanceFn, listPotsFn } from "src/server/functions/pots.fn";
+import { potsApi } from "src/shared/api/pots";
 
 export const potKeys = {
   all: ["pots"] as const,
@@ -9,10 +9,10 @@ export const potKeys = {
 
 export const potsQuery = queryOptions({
   queryKey: potKeys.list(),
-  queryFn: () => listPotsFn(),
+  queryFn: () => potsApi.list(),
 });
 
 export const totalBalanceQuery = queryOptions({
   queryKey: potKeys.totalBalance(),
-  queryFn: () => getTotalBalanceFn(),
+  queryFn: () => potsApi.getTotalBalance(),
 });

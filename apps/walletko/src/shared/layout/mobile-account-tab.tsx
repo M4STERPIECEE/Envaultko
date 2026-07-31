@@ -1,6 +1,7 @@
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import { Info, LogOut, Settings } from "lucide-react";
 import { useState } from "react";
+import { authApi } from "src/shared/api/auth";
 import { useAuthenticatedUser } from "src/shared/hooks/use-authenticated-user";
 import { getInitials } from "src/shared/layout/get-initials";
 import {
@@ -10,7 +11,6 @@ import {
 import { navItems, secondaryNavItems } from "src/shared/layout/nav-items";
 import { SheetRowLink } from "src/shared/layout/sheet-row-link";
 import { ThemeSwitcher } from "src/shared/layout/theme-switcher";
-import { authClient } from "src/shared/lib/auth-client";
 import { cn } from "src/shared/lib/utils";
 import { Avatar, AvatarFallback } from "src/shared/ui/avatar";
 import {
@@ -36,7 +36,7 @@ export function MobileAccountTab() {
 
   const handleLogout = async () => {
     setOpen(false);
-    await authClient.signOut();
+    await authApi.signOut();
     await navigate({ to: "/login" });
   };
 

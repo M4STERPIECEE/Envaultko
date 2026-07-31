@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useId } from "react";
 import { potsQuery, totalBalanceQuery } from "src/features/pots/queries";
-import { addPotFn } from "src/server/functions/pots.fn";
+import { potsApi } from "src/shared/api/pots";
 import type { ModalAllocation } from "src/shared/components/allocation-disc";
 import { useAppForm } from "src/shared/form/form-setup";
 import { Alert, AlertDescription } from "src/shared/ui/alert";
@@ -96,7 +96,7 @@ export function AddPotDialog({
   const formId = useId();
   const qc = useQueryClient();
   const mutation = useMutation({
-    mutationFn: addPotFn,
+    mutationFn: potsApi.create,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: potsQuery.queryKey });
       qc.invalidateQueries({ queryKey: totalBalanceQuery.queryKey });
@@ -118,12 +118,10 @@ export function AddPotDialog({
         .filter((a) => a.id !== NEW_POT_ID)
         .map((a) => ({ id: a.id, percentage: a.percentage }));
       mutation.mutate({
-        data: {
-          name: value.name,
-          color: value.color,
-          percentage: newPot.percentage,
-          otherPots,
-        },
+        name: value.name,
+        color: value.color,
+        percentage: newPot.percentage,
+        otherPots,
       });
     },
   });

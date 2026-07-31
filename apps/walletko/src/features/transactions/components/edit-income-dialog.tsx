@@ -6,7 +6,7 @@ import {
   incomeQuery,
   transactionKeys,
 } from "src/features/transactions/queries";
-import { updateIncomeFn } from "src/server/functions/income.fn";
+import { incomeApi } from "src/shared/api/income";
 import { useAppForm } from "src/shared/form/form-setup";
 import { Alert, AlertDescription } from "src/shared/ui/alert";
 import { Button } from "src/shared/ui/button";
@@ -63,7 +63,17 @@ function EditIncomeForm({ data, onClose }: EditIncomeFormProps) {
   } = useNameSuggestions("income");
 
   const mutation = useMutation({
-    mutationFn: updateIncomeFn,
+    mutationFn: (args: {
+      id: string;
+      name: string;
+      date: string;
+      tags: Array<{ id: string | null; name: string }>;
+    }) =>
+      incomeApi.update(args.id, {
+        name: args.name,
+        date: args.date,
+        tags: args.tags,
+      }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: tagKeys.all });
       qc.invalidateQueries({ queryKey: transactionKeys.all });
@@ -81,17 +91,15 @@ function EditIncomeForm({ data, onClose }: EditIncomeFormProps) {
     validators: { onSubmit: editIncomeSchema },
     onSubmit: ({ value }) =>
       mutation.mutate({
-        data: {
-          id: data.id,
-          name: value.name,
-          date: value.date,
-          tags: value.tags.map((opt) => {
-            const match = tagSuggestions.find((s) => s.id === opt.value);
-            return match
-              ? { id: match.id, name: match.name }
-              : { id: null, name: opt.label };
-          }),
-        },
+        id: data.id,
+        name: value.name,
+        date: value.date.toISOString(),
+        tags: value.tags.map((opt) => {
+          const match = tagSuggestions.find((s) => s.id === opt.value);
+          return match
+            ? { id: match.id, name: match.name }
+            : { id: null, name: opt.label };
+        }),
       }),
   });
 

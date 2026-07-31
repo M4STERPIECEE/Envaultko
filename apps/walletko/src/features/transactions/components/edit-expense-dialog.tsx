@@ -6,7 +6,7 @@ import {
   expenseQuery,
   transactionKeys,
 } from "src/features/transactions/queries";
-import { updateExpenseFn } from "src/server/functions/expense.fn";
+import { expenseApi } from "src/shared/api/expense";
 import { useAppForm } from "src/shared/form/form-setup";
 import { Alert, AlertDescription } from "src/shared/ui/alert";
 import { Button } from "src/shared/ui/button";
@@ -64,7 +64,17 @@ function EditExpenseForm({ data, onClose }: EditExpenseFormProps) {
   } = useNameSuggestions("expense");
 
   const mutation = useMutation({
-    mutationFn: updateExpenseFn,
+    mutationFn: (args: {
+      id: string;
+      name: string;
+      date: string;
+      tags: Array<{ id: string | null; name: string }>;
+    }) =>
+      expenseApi.update(args.id, {
+        name: args.name,
+        date: args.date,
+        tags: args.tags,
+      }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: tagKeys.all });
       qc.invalidateQueries({ queryKey: transactionKeys.all });
@@ -82,17 +92,15 @@ function EditExpenseForm({ data, onClose }: EditExpenseFormProps) {
     validators: { onSubmit: editExpenseSchema },
     onSubmit: ({ value }) =>
       mutation.mutate({
-        data: {
-          id: data.id,
-          name: value.name,
-          date: value.date,
-          tags: value.tags.map((opt) => {
-            const match = tagSuggestions.find((s) => s.id === opt.value);
-            return match
-              ? { id: match.id, name: match.name }
-              : { id: null, name: opt.label };
-          }),
-        },
+        id: data.id,
+        name: value.name,
+        date: value.date.toISOString(),
+        tags: value.tags.map((opt) => {
+          const match = tagSuggestions.find((s) => s.id === opt.value);
+          return match
+            ? { id: match.id, name: match.name }
+            : { id: null, name: opt.label };
+        }),
       }),
   });
 

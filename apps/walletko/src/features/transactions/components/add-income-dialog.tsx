@@ -5,7 +5,7 @@ import { potsQuery, totalBalanceQuery } from "src/features/pots/queries";
 import { tagKeys, tagsQuery } from "src/features/tags/queries";
 import { useNameSuggestions } from "src/features/transactions/hooks/use-name-suggestions";
 import { transactionKeys } from "src/features/transactions/queries";
-import { receiveIncomeFn } from "src/server/functions/income.fn";
+import { incomeApi } from "src/shared/api/income";
 import { useAppForm } from "src/shared/form/form-setup";
 import { Alert, AlertDescription } from "src/shared/ui/alert";
 import { Button } from "src/shared/ui/button";
@@ -52,7 +52,7 @@ export function AddIncomeDialog({ open, onOpenChange }: AddIncomeDialogProps) {
   }));
 
   const mutation = useMutation({
-    mutationFn: receiveIncomeFn,
+    mutationFn: incomeApi.receive,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: tagKeys.all });
       qc.invalidateQueries({ queryKey: potsQuery.queryKey });
@@ -73,17 +73,15 @@ export function AddIncomeDialog({ open, onOpenChange }: AddIncomeDialogProps) {
     validators: { onSubmit: addIncomeSchema },
     onSubmit: ({ value }) =>
       mutation.mutate({
-        data: {
-          name: value.name,
-          amount: value.amount,
-          tags: value.tags.map((opt) => {
-            const match = tagSuggestions.find((s) => s.id === opt.value);
-            return match
-              ? { id: match.id, name: match.name }
-              : { id: null, name: opt.label };
-          }),
-          createdAt: value.date,
-        },
+        name: value.name,
+        amount: value.amount,
+        tags: value.tags.map((opt) => {
+          const match = tagSuggestions.find((s) => s.id === opt.value);
+          return match
+            ? { id: match.id, name: match.name }
+            : { id: null, name: opt.label };
+        }),
+        createdAt: value.date.toISOString(),
       }),
   });
 

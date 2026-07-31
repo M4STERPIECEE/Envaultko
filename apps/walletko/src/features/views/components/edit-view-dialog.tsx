@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useId } from "react";
 import { tagsQuery } from "src/features/tags/queries";
 import { viewKeys } from "src/features/views/queries";
-import { updateViewFn } from "src/server/functions/views.fn";
+import { viewsApi } from "src/shared/api/views";
 import { useAppForm } from "src/shared/form/form-setup";
 import { Alert, AlertDescription } from "src/shared/ui/alert";
 import { Button } from "src/shared/ui/button";
@@ -62,7 +62,7 @@ export function EditViewDialog({ open, onClose, view }: Props) {
       description?: string;
       nameFilter?: string;
       tagIds: string[];
-    }) => updateViewFn({ data: { id: view.id, ...payload } }),
+    }) => viewsApi.update(view.id, payload),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: viewKeys.all });
       onClose();

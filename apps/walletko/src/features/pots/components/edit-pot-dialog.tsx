@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useId } from "react";
 import { potsQuery } from "src/features/pots/queries";
-import { editPotFn } from "src/server/functions/pots.fn";
+import { potsApi } from "src/shared/api/pots";
 import { useAppForm } from "src/shared/form/form-setup";
 import { Alert, AlertDescription } from "src/shared/ui/alert";
 import { Button } from "src/shared/ui/button";
@@ -38,7 +38,8 @@ export function EditPotDialog({ open, onClose, pot }: Props) {
   const formId = useId();
   const qc = useQueryClient();
   const mutation = useMutation({
-    mutationFn: editPotFn,
+    mutationFn: (args: { potId: string; name: string; color: string }) =>
+      potsApi.edit(args.potId, { name: args.name, color: args.color }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: potsQuery.queryKey });
       onClose();
@@ -49,9 +50,7 @@ export function EditPotDialog({ open, onClose, pot }: Props) {
     defaultValues: { name: pot.name, color: pot.color },
     validators: { onSubmit: editPotFormSchema },
     onSubmit: ({ value }) => {
-      mutation.mutate({
-        data: { potId: pot.id, name: value.name, color: value.color },
-      });
+      mutation.mutate({ potId: pot.id, name: value.name, color: value.color });
     },
   });
 

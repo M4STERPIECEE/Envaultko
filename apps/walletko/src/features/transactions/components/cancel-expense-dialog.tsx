@@ -1,11 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { dashboardKeys } from "src/features/dashboard/queries";
-import { potKeys } from "src/features/pots/queries";
+import { potKeys, potsQuery } from "src/features/pots/queries";
 import {
   expenseCancelPreviewQuery,
   transactionKeys,
 } from "src/features/transactions/queries";
-import { cancelExpenseFn } from "src/server/functions/expense.fn";
+import { expenseApi } from "src/shared/api/expense";
 import { Alert, AlertDescription } from "src/shared/ui/alert";
 import { Button } from "src/shared/ui/button";
 import {
@@ -29,6 +29,7 @@ export function CancelExpenseDialog({
   onOpenChange,
 }: CancelExpenseDialogProps) {
   const qc = useQueryClient();
+  const { data: pots } = useQuery(potsQuery);
 
   const {
     data: preview,
@@ -40,7 +41,7 @@ export function CancelExpenseDialog({
   });
 
   const mutation = useMutation({
-    mutationFn: cancelExpenseFn,
+    mutationFn: (args: { id: string }) => expenseApi.cancel(args.id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: transactionKeys.all });
       qc.invalidateQueries({ queryKey: dashboardKeys.all });
@@ -53,6 +54,14 @@ export function CancelExpenseDialog({
     mutation.reset();
     onOpenChange(false);
   };
+
+  const potNameMap = new Map((pots ?? []).map((p) => [p.id, p.name]));
+
+  const previewLines = (preview?.allocations ?? []).map((alloc) => ({
+    potId: alloc.potId,
+    potName: potNameMap.get(alloc.potId) ?? alloc.potId,
+    amount: alloc.amount,
+  }));
 
   const previewReady = !isLoading && !isError && preview != null;
 
@@ -79,38 +88,20 @@ export function CancelExpenseDialog({
         ) : (
           <div className="space-y-2">
             <ul className="divide-y rounded-md border">
-              {preview.lines.map((line) => (
+              {previewLines.map((line) => (
                 <li
                   key={line.potId}
                   className="flex items-center justify-between gap-2 px-3 py-2 text-sm"
                 >
-                  <span className="flex flex-wrap items-center gap-1.5">
-                    {line.potName}
-                    {line.redirected && (
-                      <span className="text-xs text-muted-foreground">
-                        (no longer exists → {preview.defaultPotName})
-                      </span>
-                    )}
-                  </span>
+                  <span>{line.potName}</span>
                   <span className="flex shrink-0 items-center gap-2 tabular-nums">
                     <span className="font-medium text-income">
                       +<Money value={line.amount} />
                     </span>
-                    {!line.redirected && line.resultingBalance !== null && (
-                      <span className="text-muted-foreground">
-                        → <Money value={line.resultingBalance} />
-                      </span>
-                    )}
                   </span>
                 </li>
               ))}
             </ul>
-            {preview.redirectTotal > 0 && (
-              <p className="text-xs text-muted-foreground">
-                <Money value={preview.redirectTotal} /> from archived pots will
-                be returned to {preview.defaultPotName}.
-              </p>
-            )}
           </div>
         )}
 
@@ -132,9 +123,7 @@ export function CancelExpenseDialog({
           </Button>
           <Button
             variant="destructive"
-            onClick={() =>
-              expense && mutation.mutate({ data: { id: expense.id } })
-            }
+            onClick={() => expense && mutation.mutate({ id: expense.id })}
             disabled={mutation.isPending || !previewReady}
           >
             {mutation.isPending ? "Cancelling…" : "Cancel expense"}

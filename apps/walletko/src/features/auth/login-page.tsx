@@ -1,8 +1,8 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { AuthShell } from "src/features/auth/components/auth-shell";
+import { authApi } from "src/shared/api/auth";
 import { useAppForm } from "src/shared/form/form-setup";
-import { authClient } from "src/shared/lib/auth-client";
 import { Alert, AlertDescription } from "src/shared/ui/alert";
 import { z } from "zod";
 
@@ -19,12 +19,14 @@ export function LoginPage() {
     validators: { onSubmit: loginSchema },
     onSubmit: async ({ value }) => {
       setServerError(null);
-      const { error } = await authClient.emailOtp.sendVerificationOtp({
-        email: value.email,
-        type: "sign-in",
-      });
-      if (error) {
-        setServerError(error.message ?? "Failed to send code. Try again.");
+      try {
+        await authApi.sendOtp(value.email);
+      } catch (err) {
+        setServerError(
+          err instanceof Error
+            ? err.message
+            : "Failed to send code. Try again.",
+        );
         return;
       }
       await navigate({ to: "/login/verify", search: { email: value.email } });

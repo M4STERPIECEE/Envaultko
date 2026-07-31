@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useId } from "react";
 import { tagsQuery } from "src/features/tags/queries";
 import { viewKeys } from "src/features/views/queries";
-import { createViewFn } from "src/server/functions/views.fn";
+import { viewsApi } from "src/shared/api/views";
 import { useAppForm } from "src/shared/form/form-setup";
 import { Alert, AlertDescription } from "src/shared/ui/alert";
 import { Button } from "src/shared/ui/button";
@@ -41,12 +41,7 @@ export function CreateViewDialog({ open, onClose }: Props) {
   }));
 
   const mutation = useMutation({
-    mutationFn: (payload: {
-      name: string;
-      description?: string;
-      nameFilter?: string;
-      tagIds: string[];
-    }) => createViewFn({ data: payload }),
+    mutationFn: viewsApi.create,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: viewKeys.list() });
       onClose();

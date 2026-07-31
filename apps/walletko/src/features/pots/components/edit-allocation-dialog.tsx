@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useId } from "react";
 import { potsQuery, totalBalanceQuery } from "src/features/pots/queries";
-import { editAllocationFn } from "src/server/functions/pots.fn";
+import { potsApi } from "src/shared/api/pots";
 import type { ModalAllocation } from "src/shared/components/allocation-disc";
 import { useAppForm } from "src/shared/form/form-setup";
 import { Alert, AlertDescription } from "src/shared/ui/alert";
@@ -47,7 +47,7 @@ export function EditAllocationDialog({ open, onClose, allPots }: Props) {
 
   const qc = useQueryClient();
   const mutation = useMutation({
-    mutationFn: editAllocationFn,
+    mutationFn: potsApi.editAllocations,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: potsQuery.queryKey });
       qc.invalidateQueries({ queryKey: totalBalanceQuery.queryKey });
@@ -68,12 +68,10 @@ export function EditAllocationDialog({ open, onClose, allPots }: Props) {
     },
     onSubmit: ({ value }) => {
       mutation.mutate({
-        data: {
-          allPots: value.allocations.map((a) => ({
-            id: a.id,
-            percentage: a.percentage,
-          })),
-        },
+        allPots: value.allocations.map((a) => ({
+          id: a.id,
+          percentage: a.percentage,
+        })),
       });
     },
   });

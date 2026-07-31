@@ -5,7 +5,7 @@ import {
   Pencil,
   Trash2,
 } from "lucide-react";
-import type { TransactionDTO } from "src/server/contracts/transaction";
+import type { TransactionDTO } from "src/shared/api/transactions";
 import { useFormatDate } from "src/shared/hooks/use-format-date";
 import { cn } from "src/shared/lib/utils";
 import { Badge } from "src/shared/ui/badge";

@@ -7,8 +7,8 @@ import { potsQuery, totalBalanceQuery } from "src/features/pots/queries";
 import { tagKeys, tagsQuery } from "src/features/tags/queries";
 import { useNameSuggestions } from "src/features/transactions/hooks/use-name-suggestions";
 import { transactionKeys } from "src/features/transactions/queries";
-import type { PotWithBalanceDTO } from "src/server/contracts/pot";
-import { payExpenseFn } from "src/server/functions/expense.fn";
+import { expenseApi } from "src/shared/api/expense";
+import type { PotWithBalanceDTO } from "src/shared/api/pots";
 import { useAppForm } from "src/shared/form/form-setup";
 import { useFormatError } from "src/shared/lib/use-format-error";
 import { Alert, AlertDescription } from "src/shared/ui/alert";
@@ -82,7 +82,7 @@ export function AddExpenseDialog({
   }));
 
   const mutation = useMutation({
-    mutationFn: payExpenseFn,
+    mutationFn: expenseApi.pay,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: potsQuery.queryKey });
       qc.invalidateQueries({ queryKey: totalBalanceQuery.queryKey });
@@ -103,20 +103,18 @@ export function AddExpenseDialog({
     validators: { onSubmit: addExpenseSchema },
     onSubmit: ({ value }) =>
       mutation.mutate({
-        data: {
-          name: value.name,
-          tags: value.tags.map((opt) => {
-            const match = tagSuggestions.find((s) => s.id === opt.value);
-            return match
-              ? { id: match.id, name: match.name }
-              : { id: null, name: opt.label };
-          }),
-          drawFrom: value.drawFrom.map((e) => ({
-            potId: e.potId,
-            amount: e.amount,
-          })),
-          createdAt: value.date,
-        },
+        name: value.name,
+        tags: value.tags.map((opt) => {
+          const match = tagSuggestions.find((s) => s.id === opt.value);
+          return match
+            ? { id: match.id, name: match.name }
+            : { id: null, name: opt.label };
+        }),
+        drawFrom: value.drawFrom.map((e) => ({
+          potId: e.potId,
+          amount: e.amount,
+        })),
+        createdAt: value.date.toISOString(),
       }),
   });
 

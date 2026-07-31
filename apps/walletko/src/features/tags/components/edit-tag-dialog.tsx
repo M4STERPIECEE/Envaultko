@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useId } from "react";
 import { tagKeys } from "src/features/tags/queries";
-import { editTagFn } from "src/server/functions/tags.fn";
+import { tagsApi } from "src/shared/api/tags";
 import { useAppForm } from "src/shared/form/form-setup";
 import { Alert, AlertDescription } from "src/shared/ui/alert";
 import { Button } from "src/shared/ui/button";
@@ -31,7 +31,8 @@ export function EditTagDialog({ open, onClose, tag }: Props) {
   const formId = useId();
   const qc = useQueryClient();
   const mutation = useMutation({
-    mutationFn: editTagFn,
+    mutationFn: (args: { data: { id: string; name: string } }) =>
+      tagsApi.update(args.data.id, { name: args.data.name }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: tagKeys.all });
       onClose();
@@ -45,6 +46,13 @@ export function EditTagDialog({ open, onClose, tag }: Props) {
       mutation.mutate({ data: { id: tag.id, name: value.name } });
     },
   });
+
+  const errorMessage = mutation.isError
+    ? mutation.error instanceof Error &&
+      mutation.error.message === "name_conflict"
+      ? "A tag with this name already exists."
+      : "Something went wrong. Please try again."
+    : null;
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: reset only on open transition
   useEffect(() => {
@@ -74,13 +82,9 @@ export function EditTagDialog({ open, onClose, tag }: Props) {
               {(field) => <field.InputField label="Name" />}
             </f.AppField>
 
-            {mutation.isError && (
+            {errorMessage && (
               <Alert variant="destructive">
-                <AlertDescription>
-                  {mutation.error?.message === "name_conflict"
-                    ? "A tag with this name already exists."
-                    : "Something went wrong. Please try again."}
-                </AlertDescription>
+                <AlertDescription>{errorMessage}</AlertDescription>
               </Alert>
             )}
           </div>

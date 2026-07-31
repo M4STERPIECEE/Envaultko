@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useId } from "react";
 import { tagKeys } from "src/features/tags/queries";
-import { addTagFn } from "src/server/functions/tags.fn";
+import { tagsApi } from "src/shared/api/tags";
 import { useAppForm } from "src/shared/form/form-setup";
 import { Alert, AlertDescription } from "src/shared/ui/alert";
 import { Button } from "src/shared/ui/button";
@@ -28,7 +28,7 @@ export function AddTagDialog({ open, onClose }: Props) {
   const formId = useId();
   const qc = useQueryClient();
   const mutation = useMutation({
-    mutationFn: addTagFn,
+    mutationFn: (args: { data: { name: string } }) => tagsApi.create(args.data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: tagKeys.all });
       onClose();
@@ -42,6 +42,13 @@ export function AddTagDialog({ open, onClose }: Props) {
       mutation.mutate({ data: { name: value.name } });
     },
   });
+
+  const errorMessage = mutation.isError
+    ? mutation.error instanceof Error &&
+      mutation.error.message === "name_conflict"
+      ? "A tag with this name already exists."
+      : "Something went wrong. Please try again."
+    : null;
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: reset only on open transition
   useEffect(() => {
@@ -73,13 +80,9 @@ export function AddTagDialog({ open, onClose }: Props) {
               )}
             </f.AppField>
 
-            {mutation.isError && (
+            {errorMessage && (
               <Alert variant="destructive">
-                <AlertDescription>
-                  {mutation.error?.message === "name_conflict"
-                    ? "A tag with this name already exists."
-                    : "Something went wrong. Please try again."}
-                </AlertDescription>
+                <AlertDescription>{errorMessage}</AlertDescription>
               </Alert>
             )}
           </div>

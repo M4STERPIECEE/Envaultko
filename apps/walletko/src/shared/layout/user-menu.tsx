@@ -1,8 +1,8 @@
 import { useNavigate } from "@tanstack/react-router";
 import { Info, LogOut, MoreVerticalIcon, Settings } from "lucide-react";
+import { authApi } from "src/shared/api/auth";
 import { useAuthenticatedUser } from "src/shared/hooks/use-authenticated-user";
 import { getInitials } from "src/shared/layout/get-initials";
-import { authClient } from "src/shared/lib/auth-client";
 import { cn } from "src/shared/lib/utils";
 import { Avatar, AvatarFallback } from "src/shared/ui/avatar";
 import {
@@ -18,7 +18,7 @@ export function UserMenu({ collapsed }: { collapsed: boolean }) {
   const navigate = useNavigate();
 
   const handleLogout = async () => {
-    await authClient.signOut();
+    await authApi.signOut();
     await navigate({ to: "/login" });
   };
 
