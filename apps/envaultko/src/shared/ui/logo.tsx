@@ -12,7 +12,7 @@ export function Logo({ className, ...props }: SVGProps<SVGSVGElement>) {
     <svg
       viewBox="0 0 120 120"
       role="img"
-      aria-label="Walletko"
+      aria-label="Envaultko"
       className={cn("size-7", className)}
       {...props}
     >

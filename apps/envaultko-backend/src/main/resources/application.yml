@@ -3,7 +3,7 @@ server:
 
 spring:
   application:
-    name: walletko-backend
+    name: envaultko-backend
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/walletko}
     username: ${SPRING_DATASOURCE_USERNAME:postgres}
@@ -32,11 +32,11 @@ spring:
           starttls:
             enable: ${SMTP_TLS:false}
 
-walletko:
+envaultko:
   app:
     url: ${APP_URL:http://localhost:5173}
   email:
-    from: ${EMAIL_FROM:noreply@walletko.local}
+    from: ${EMAIL_FROM:noreply@envaultko.local}
   auth:
     otp:
       length: 6

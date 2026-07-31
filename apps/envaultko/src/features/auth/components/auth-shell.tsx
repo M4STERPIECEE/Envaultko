@@ -24,7 +24,9 @@ export function AuthShell({ title, description, children }: AuthShellProps) {
       <div className="relative w-full max-w-sm space-y-6">
         <div className="flex flex-col items-center gap-2">
           <Logo className="size-12" />
-          <span className="text-lg font-semibold tracking-tight">Walletko</span>
+          <span className="text-lg font-semibold tracking-tight">
+            Envaultko
+          </span>
         </div>
         <Card>
           <CardHeader className="pb-4">

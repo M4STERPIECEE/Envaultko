@@ -35,7 +35,7 @@ export function LoginPage() {
 
   return (
     <AuthShell
-      title="Welcome to Walletko"
+      title="Welcome to Envaultko"
       description="Enter your email to sign in or create an account."
     >
       <form

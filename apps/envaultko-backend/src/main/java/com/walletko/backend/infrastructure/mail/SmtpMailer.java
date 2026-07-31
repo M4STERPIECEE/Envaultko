@@ -11,7 +11,7 @@ public class SmtpMailer {
     private final String from;
 
     public SmtpMailer(JavaMailSender mailSender,
-                       @Value("${walletko.email.from}") String from) {
+                       @Value("${envaultko.email.from}") String from) {
         this.mailSender = mailSender;
         this.from = from;
     }
@@ -20,7 +20,7 @@ public class SmtpMailer {
         var message = new SimpleMailMessage();
         message.setFrom(from);
         message.setTo(to);
-        message.setSubject("Your Walletko sign-in code");
+        message.setSubject("Your Envaultko sign-in code");
         message.setText("Your verification code is: " + otp + "\n\n"
                       + "This code expires in 5 minutes.\n"
                       + "If you didn't request this, please ignore this email.");
