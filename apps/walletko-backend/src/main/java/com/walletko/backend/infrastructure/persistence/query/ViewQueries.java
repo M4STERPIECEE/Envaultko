@@ -1,5 +1,6 @@
 package com.walletko.backend.infrastructure.persistence.query;
 
+import com.walletko.backend.application.savedview.ViewQuery;
 import com.walletko.backend.infrastructure.persistence.repository.*;
 import com.walletko.backend.interfaces.dto.*;
 import org.springframework.stereotype.Component;
@@ -8,7 +9,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Component
-public class ViewQueries {
+public class ViewQueries implements ViewQuery {
     private final TransactionJpaRepository txJpa;
     private final TagJpaRepository tagJpa;
     private final TransactionTagJpaRepository txTagJpa;
@@ -24,8 +25,7 @@ public class ViewQueries {
         this.viewJpa = viewJpa;
     }
 
-    public record ViewStatsDTO(long totalIncome, long totalExpense, long balance) {}
-
+    @Override
     public ViewStatsDTO getViewStats(String userId, String nameFilter, List<String> tagIds) {
         var txs = filterTransactions(txJpa.findByUserId(userId), nameFilter, tagIds);
         long totalIncome = 0, totalExpense = 0;
@@ -36,6 +36,7 @@ public class ViewQueries {
         return new ViewStatsDTO(totalIncome, totalExpense, totalIncome - totalExpense);
     }
 
+    @Override
     public List<MonthStatDTO> getViewYearStats(String userId, int year,
                                                  String nameFilter, List<String> tagIds) {
         var allTxs = filterTransactions(txJpa.findByUserId(userId), nameFilter, tagIds);

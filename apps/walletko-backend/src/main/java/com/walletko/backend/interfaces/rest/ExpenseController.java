@@ -10,6 +10,7 @@ import com.walletko.backend.interfaces.dto.request.PayExpenseRequest;
 import com.walletko.backend.interfaces.dto.request.UpdateExpenseRequest;
 import com.walletko.backend.interfaces.dto.response.IdResponse;
 import com.walletko.backend.interfaces.mapper.ExpenseViewMapper;
+import com.walletko.backend.interfaces.mapper.RequestMapper;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -24,19 +25,22 @@ public class ExpenseController {
     private final CancelExpenseService cancelExpenseService;
     private final ResolveOwnedTags resolveOwnedTags;
     private final ExpenseViewMapper expenseViewMapper;
+    private final RequestMapper requestMapper;
 
     public ExpenseController(ExpenseRepository expenseRepo,
                               PayExpenseService payExpenseService,
                               UpdateExpenseService updateExpenseService,
                               CancelExpenseService cancelExpenseService,
                               ResolveOwnedTags resolveOwnedTags,
-                              ExpenseViewMapper expenseViewMapper) {
+                              ExpenseViewMapper expenseViewMapper,
+                              RequestMapper requestMapper) {
         this.expenseRepo = expenseRepo;
         this.payExpenseService = payExpenseService;
         this.updateExpenseService = updateExpenseService;
         this.cancelExpenseService = cancelExpenseService;
         this.resolveOwnedTags = resolveOwnedTags;
         this.expenseViewMapper = expenseViewMapper;
+        this.requestMapper = requestMapper;
     }
 
     private Id userId(Authentication auth) {
@@ -47,12 +51,9 @@ public class ExpenseController {
     public ResponseEntity<IdResponse> payExpense(Authentication auth,
                                                   @Valid @RequestBody PayExpenseRequest req) {
         var userId = userId(auth);
-        var tags = resolveOwnedTags.resolve(userId, req.tags().stream()
-            .map(t -> new ResolveOwnedTags.TagInput(t.id(), t.name())).toList());
-        var drawFrom = req.drawFrom().stream()
-            .map(d -> new DrawFrom(new Id(d.potId()), Money.fromCents(d.amount())))
-            .toList();
-        var createdAt = req.createdAt() != null ? Datetime.of(req.createdAt()) : null;
+        var tags = resolveOwnedTags.resolve(userId, requestMapper.toTagInputs(req.tags()));
+        var drawFrom = requestMapper.toDrawFroms(req.drawFrom());
+        var createdAt = requestMapper.toDatetime(req.createdAt());
         var id = payExpenseService.execute(new Name(req.name()), tags, drawFrom, userId, createdAt);
         return ResponseEntity.ok(new IdResponse(id.value()));
     }
@@ -70,10 +71,9 @@ public class ExpenseController {
                                                      @PathVariable String id,
                                                      @Valid @RequestBody UpdateExpenseRequest req) {
         var userId = userId(auth);
-        var tags = resolveOwnedTags.resolve(userId, req.tags().stream()
-            .map(t -> new ResolveOwnedTags.TagInput(t.id(), t.name())).toList());
+        var tags = resolveOwnedTags.resolve(userId, requestMapper.toTagInputs(req.tags()));
         updateExpenseService.execute(new Id(id), new Name(req.name()),
-            Datetime.of(req.date()), tags, userId);
+            requestMapper.toDatetime(req.date()), tags, userId);
         return ResponseEntity.ok(new IdResponse(id));
     }
 

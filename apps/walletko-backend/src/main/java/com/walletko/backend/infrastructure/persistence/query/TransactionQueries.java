@@ -1,12 +1,13 @@
 package com.walletko.backend.infrastructure.persistence.query;
 
+import com.walletko.backend.application.transaction.TransactionQuery;
 import com.walletko.backend.infrastructure.persistence.repository.*;
 import com.walletko.backend.interfaces.dto.*;
 import org.springframework.stereotype.Component;
 import java.util.*;
 
 @Component
-public class TransactionQueries {
+public class TransactionQueries implements TransactionQuery {
     private static final int PAGE_SIZE = 20;
 
     private final TransactionJpaRepository txJpa;

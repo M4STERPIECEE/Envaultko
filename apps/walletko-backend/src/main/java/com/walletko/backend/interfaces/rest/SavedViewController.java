@@ -3,8 +3,9 @@ package com.walletko.backend.interfaces.rest;
 import com.walletko.backend.application.savedview.*;
 import com.walletko.backend.domain.savedview.*;
 import com.walletko.backend.domain.shared.vo.*;
-import com.walletko.backend.infrastructure.persistence.query.ViewQueries;
+import com.walletko.backend.interfaces.dto.MonthStatDTO;
 import com.walletko.backend.interfaces.dto.SavedViewListItemDTO;
+import com.walletko.backend.interfaces.dto.ViewStatsDTO;
 import com.walletko.backend.interfaces.dto.request.UpsertViewRequest;
 import com.walletko.backend.interfaces.mapper.SavedViewDtoMapper;
 import jakarta.validation.Valid;
@@ -17,19 +18,19 @@ import java.util.List;
 @RequestMapping("/api/views")
 public class SavedViewController {
     private final SavedViewRepository viewRepo;
-    private final ViewQueries viewQueries;
+    private final ViewQuery viewQuery;
     private final CreateViewService createViewService;
     private final UpdateViewService updateViewService;
     private final DeleteViewService deleteViewService;
     private final SavedViewDtoMapper savedViewDtoMapper;
 
-    public SavedViewController(SavedViewRepository viewRepo, ViewQueries viewQueries,
+    public SavedViewController(SavedViewRepository viewRepo, ViewQuery viewQuery,
                                 CreateViewService createViewService,
                                 UpdateViewService updateViewService,
                                 DeleteViewService deleteViewService,
                                 SavedViewDtoMapper savedViewDtoMapper) {
         this.viewRepo = viewRepo;
-        this.viewQueries = viewQueries;
+        this.viewQuery = viewQuery;
         this.createViewService = createViewService;
         this.updateViewService = updateViewService;
         this.deleteViewService = deleteViewService;
@@ -55,20 +56,21 @@ public class SavedViewController {
     }
 
     @GetMapping("/{id}/stats")
-    public ResponseEntity<?> getViewStats(Authentication auth, @PathVariable String id) {
+    public ResponseEntity<ViewStatsDTO> getViewStats(Authentication auth, @PathVariable String id) {
         var userId = userId(auth);
         return viewRepo.findById(new Id(id), userId)
-            .map(v -> ResponseEntity.ok(viewQueries.getViewStats(
+            .map(v -> ResponseEntity.ok(viewQuery.getViewStats(
                 userId.value(), v.nameFilter(), savedViewDtoMapper.tagIdValues(v))))
             .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/{id}/year-stats")
-    public ResponseEntity<?> getViewYearStats(Authentication auth, @PathVariable String id,
-                                               @RequestParam int year) {
+    public ResponseEntity<List<MonthStatDTO>> getViewYearStats(Authentication auth,
+                                                               @PathVariable String id,
+                                                               @RequestParam int year) {
         var userId = userId(auth);
         return viewRepo.findById(new Id(id), userId)
-            .map(v -> ResponseEntity.ok(viewQueries.getViewYearStats(
+            .map(v -> ResponseEntity.ok(viewQuery.getViewYearStats(
                 userId.value(), year, v.nameFilter(), savedViewDtoMapper.tagIdValues(v))))
             .orElse(ResponseEntity.notFound().build());
     }

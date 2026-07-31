@@ -1,5 +1,6 @@
 package com.walletko.backend.infrastructure.persistence.query;
 
+import com.walletko.backend.application.dashboard.DashboardQuery;
 import com.walletko.backend.domain.shared.vo.*;
 import com.walletko.backend.infrastructure.persistence.repository.*;
 import com.walletko.backend.interfaces.dto.*;
@@ -8,7 +9,7 @@ import java.time.OffsetDateTime;
 import java.util.*;
 
 @Component
-public class DashboardQueries {
+public class DashboardQueries implements DashboardQuery {
     private final TransactionJpaRepository txJpa;
     private final PotAllocationJpaRepository potAllocJpa;
     private final ExpenseAllocationJpaRepository expenseAllocJpa;
@@ -24,6 +25,7 @@ public class DashboardQueries {
         this.potJpa = potJpa;
     }
 
+    @Override
     public OverviewStatsDTO getOverviewStats(String userId) {
         var now = OffsetDateTime.now();
         var startOfMonth = now.withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0).withNano(0);
@@ -55,6 +57,7 @@ public class DashboardQueries {
                                     totalAllTimeIncome, totalAllTimeExpense);
     }
 
+    @Override
     public List<TopPotDTO> listTopPots(String userId, int limit) {
         var pots = potJpa.findByUserIdAndArchivedAtIsNull(userId);
         return pots.stream()
@@ -69,6 +72,7 @@ public class DashboardQueries {
             .toList();
     }
 
+    @Override
     public List<MonthStatDTO> getYearStats(String userId, int year) {
         var start = OffsetDateTime.now().withYear(year).withMonth(1).withDayOfMonth(1)
             .withHour(0).withMinute(0).withSecond(0).withNano(0);
@@ -108,6 +112,7 @@ public class DashboardQueries {
         return result;
     }
 
+    @Override
     public long computeTotalBalance(String userId) {
         var pots = potJpa.findByUserId(userId);
         return pots.stream()
