@@ -2,10 +2,8 @@ package com.walletko.backend.infrastructure.persistence.repository;
 
 import com.walletko.backend.domain.expense.*;
 import com.walletko.backend.domain.shared.vo.*;
-import com.walletko.backend.domain.tag.Tag;
 import com.walletko.backend.infrastructure.persistence.mapper.DomainMapper;
 import org.springframework.stereotype.Repository;
-import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -28,8 +26,7 @@ public class DrizzleExpenseRepository implements ExpenseRepository {
     @Override
     public void save(Expense expense) {
         var d = expense.data();
-        txJpa.save(DomainMapper.toJpa("expense", d.id(), d.name(), d.amount(),
-                                       d.userId(), null, d.createdAt(), d.createdAt()));
+        txJpa.save(DomainMapper.toJpa(d));
         for (var alloc : d.allocations()) {
             allocJpa.save(DomainMapper.toJpa(alloc));
         }
@@ -41,12 +38,11 @@ public class DrizzleExpenseRepository implements ExpenseRepository {
     @Override
     public void update(Expense expense) {
         var d = expense.data();
-        txJpa.findByIdAndUserId(d.id().value(), d.userId().value())
-            .ifPresent(tx -> {
-                tx.setName(d.name().value());
-                tx.setUpdatedAt(DomainMapper.toOdt(Datetime.now()));
-                txJpa.save(tx);
-            });
+        txJpa.findByIdAndUserId(d.id().value(), d.userId().value()).ifPresent(tx -> {
+            tx.setName(d.name().value());
+            tx.setUpdatedAt(DomainMapper.toOdt(Datetime.now()));
+            txJpa.save(tx);
+        });
         txTagJpa.deleteByTransactionId(d.id().value());
         for (var tag : d.tags()) {
             txTagJpa.save(DomainMapper.toJpa(d.id().value(), tag.data().id().value()));
@@ -79,6 +75,6 @@ public class DrizzleExpenseRepository implements ExpenseRepository {
     @Override
     public void markCanceled(Id id, Id userId) {
         txJpa.findByIdAndUserId(id.value(), userId.value())
-            .ifPresent(tx -> txJpa.delete(tx));
+            .ifPresent(txJpa::delete);
     }
 }

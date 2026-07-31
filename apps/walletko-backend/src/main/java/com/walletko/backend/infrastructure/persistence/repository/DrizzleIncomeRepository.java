@@ -2,10 +2,8 @@ package com.walletko.backend.infrastructure.persistence.repository;
 
 import com.walletko.backend.domain.income.*;
 import com.walletko.backend.domain.shared.vo.*;
-import com.walletko.backend.domain.tag.Tag;
 import com.walletko.backend.infrastructure.persistence.mapper.DomainMapper;
 import org.springframework.stereotype.Repository;
-import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -28,14 +26,10 @@ public class DrizzleIncomeRepository implements IncomeRepository {
     @Override
     public void save(Income income) {
         var d = income.data();
-        // Save transaction row
-        txJpa.save(DomainMapper.toJpa("income", d.id(), d.name(), d.amount(),
-                                       d.userId(), null, d.createdAt(), d.createdAt()));
-        // Save pot allocations
+        txJpa.save(DomainMapper.toJpa(d));
         for (var alloc : d.allocations()) {
             allocJpa.save(DomainMapper.toJpa(alloc));
         }
-        // Save tag links
         for (var tag : d.tags()) {
             txTagJpa.save(DomainMapper.toJpa(d.id().value(), tag.data().id().value()));
         }
@@ -44,13 +38,11 @@ public class DrizzleIncomeRepository implements IncomeRepository {
     @Override
     public void update(Income income) {
         var d = income.data();
-        var txOpt = txJpa.findByIdAndUserId(d.id().value(), d.userId().value());
-        txOpt.ifPresent(tx -> {
+        txJpa.findByIdAndUserId(d.id().value(), d.userId().value()).ifPresent(tx -> {
             tx.setName(d.name().value());
             tx.setUpdatedAt(DomainMapper.toOdt(Datetime.now()));
             txJpa.save(tx);
         });
-        // Re-sync tag links
         txTagJpa.deleteByTransactionId(d.id().value());
         for (var tag : d.tags()) {
             txTagJpa.save(DomainMapper.toJpa(d.id().value(), tag.data().id().value()));
@@ -83,8 +75,6 @@ public class DrizzleIncomeRepository implements IncomeRepository {
     @Override
     public void markCanceled(Id id, Id userId) {
         txJpa.findByIdAndUserId(id.value(), userId.value())
-            .ifPresent(tx -> {
-                txJpa.delete(tx); // replaced by cancellation txns
-            });
+            .ifPresent(txJpa::delete);
     }
 }
