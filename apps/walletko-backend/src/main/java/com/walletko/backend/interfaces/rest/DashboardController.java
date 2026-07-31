@@ -1,35 +1,39 @@
 package com.walletko.backend.interfaces.rest;
 
-import com.walletko.backend.infrastructure.persistence.query.DashboardQueries;
+import com.walletko.backend.application.dashboard.DashboardQuery;
+import com.walletko.backend.interfaces.dto.MonthStatDTO;
+import com.walletko.backend.interfaces.dto.OverviewStatsDTO;
+import com.walletko.backend.interfaces.dto.TopPotDTO;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/dashboard")
 public class DashboardController {
-    private final DashboardQueries dashboardQueries;
+    private final DashboardQuery dashboardQuery;
 
-    public DashboardController(DashboardQueries dashboardQueries) {
-        this.dashboardQueries = dashboardQueries;
+    public DashboardController(DashboardQuery dashboardQuery) {
+        this.dashboardQuery = dashboardQuery;
     }
 
     @GetMapping("/overview")
-    public ResponseEntity<?> getOverviewStats(Authentication auth) {
+    public ResponseEntity<OverviewStatsDTO> getOverviewStats(Authentication auth) {
         var userId = (String) auth.getPrincipal();
-        return ResponseEntity.ok(dashboardQueries.getOverviewStats(userId));
+        return ResponseEntity.ok(dashboardQuery.getOverviewStats(userId));
     }
 
     @GetMapping("/top-pots")
-    public ResponseEntity<?> listTopPots(Authentication auth,
-                                          @RequestParam(defaultValue = "4") int limit) {
+    public ResponseEntity<List<TopPotDTO>> listTopPots(Authentication auth,
+                                                       @RequestParam(defaultValue = "4") int limit) {
         var userId = (String) auth.getPrincipal();
-        return ResponseEntity.ok(dashboardQueries.listTopPots(userId, Math.min(limit, 20)));
+        return ResponseEntity.ok(dashboardQuery.listTopPots(userId, Math.min(limit, 20)));
     }
 
     @GetMapping("/year-stats")
-    public ResponseEntity<?> getYearStats(Authentication auth, @RequestParam int year) {
+    public ResponseEntity<List<MonthStatDTO>> getYearStats(Authentication auth, @RequestParam int year) {
         var userId = (String) auth.getPrincipal();
-        return ResponseEntity.ok(dashboardQueries.getYearStats(userId, year));
+        return ResponseEntity.ok(dashboardQuery.getYearStats(userId, year));
     }
 }

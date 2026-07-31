@@ -1,9 +1,9 @@
 package com.walletko.backend.interfaces.rest;
 
+import com.walletko.backend.application.dashboard.DashboardQuery;
 import com.walletko.backend.application.pot.*;
 import com.walletko.backend.domain.pot.*;
 import com.walletko.backend.domain.shared.vo.*;
-import com.walletko.backend.infrastructure.persistence.query.DashboardQueries;
 import com.walletko.backend.interfaces.dto.PotWithBalanceDTO;
 import com.walletko.backend.interfaces.dto.request.AddPotRequest;
 import com.walletko.backend.interfaces.mapper.PotViewMapper;
@@ -23,7 +23,7 @@ import java.util.List;
 @RequestMapping("/api/pots")
 public class PotController {
     private final PotRepository potRepo;
-    private final DashboardQueries dashboardQueries;
+    private final DashboardQuery dashboardQuery;
     private final AddPotService addPotService;
     private final EditPotService editPotService;
     private final EditAllocationService editAllocationService;
@@ -31,14 +31,14 @@ public class PotController {
     private final CreatePotTransferService createPotTransferService;
     private final PotViewMapper potViewMapper;
 
-    public PotController(PotRepository potRepo, DashboardQueries dashboardQueries,
+    public PotController(PotRepository potRepo, DashboardQuery dashboardQuery,
                           AddPotService addPotService, EditPotService editPotService,
                           EditAllocationService editAllocationService,
                           ArchivePotService archivePotService,
                           CreatePotTransferService createPotTransferService,
                           PotViewMapper potViewMapper) {
         this.potRepo = potRepo;
-        this.dashboardQueries = dashboardQueries;
+        this.dashboardQuery = dashboardQuery;
         this.addPotService = addPotService;
         this.editPotService = editPotService;
         this.editAllocationService = editAllocationService;
@@ -58,21 +58,18 @@ public class PotController {
     }
 
     @GetMapping("/balance")
-    public ResponseEntity<?> getTotalBalance(Authentication auth) {
-        var total = dashboardQueries.computeTotalBalance(userId(auth).value());
+    public ResponseEntity<TotalBalanceResponse> getTotalBalance(Authentication auth) {
+        var total = dashboardQuery.computeTotalBalance(userId(auth).value());
         return ResponseEntity.ok(new TotalBalanceResponse(total));
     }
 
     @PostMapping
     public ResponseEntity<IdResponse> addPot(Authentication auth,
                                               @Valid @RequestBody AddPotRequest req) {
-        var userId = userId(auth);
-        var otherPots = req.otherPots().stream()
-            .map(o -> new PotUpdate(new Id(o.id()), o.percentage()))
-            .toList();
         var id = addPotService.execute(
             new Name(req.name()), new Percentage(req.percentage()),
-            new Color(req.color()), otherPots, userId);
+            new Color(req.color()), potViewMapper.toPotUpdatesFromOtherPots(req.otherPots()),
+            userId(auth));
         return ResponseEntity.ok(new IdResponse(id.value()));
     }
 
@@ -87,22 +84,17 @@ public class PotController {
     @PutMapping("/allocations")
     public ResponseEntity<Void> editAllocation(Authentication auth,
                                                 @Valid @RequestBody EditAllocationRequest req) {
-        var allPots = req.allPots().stream()
-            .map(p -> new PotUpdate(new Id(p.id()), p.percentage()))
-            .toList();
-        editAllocationService.execute(allPots, userId(auth));
+        editAllocationService.execute(
+            potViewMapper.toPotUpdatesFromAllocations(req.allPots()), userId(auth));
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/{id}/archive")
     public ResponseEntity<Void> archivePot(Authentication auth, @PathVariable String id,
                                             @Valid @RequestBody ArchivePotRequest req) {
-        var remaining = req.remainingPotsPercentages().stream()
-            .map(p -> new PotUpdate(new Id(p.id()), p.percentage()))
-            .toList();
-        archivePotService.execute(new Id(id),
-            req.toPotId() != null ? new Id(req.toPotId()) : null,
-            remaining, userId(auth));
+        archivePotService.execute(new Id(id), potViewMapper.toId(req.toPotId()),
+            potViewMapper.toPotUpdatesFromAllocations(req.remainingPotsPercentages()),
+            userId(auth));
         return ResponseEntity.ok().build();
     }
 
@@ -111,7 +103,7 @@ public class PotController {
                                           @Valid @RequestBody PotTransferRequest req) {
         createPotTransferService.execute(
             new Id(req.fromPotId()), new Id(req.toPotId()),
-            Money.fromCents(req.amount()), userId(auth));
+            potViewMapper.toMoney(req.amount()), userId(auth));
         return ResponseEntity.ok().build();
     }
 }

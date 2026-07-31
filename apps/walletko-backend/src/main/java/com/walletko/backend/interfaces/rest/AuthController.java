@@ -3,7 +3,6 @@ package com.walletko.backend.interfaces.rest;
 import com.walletko.backend.application.auth.AuthService;
 import com.walletko.backend.interfaces.dto.AuthSessionDTO;
 import com.walletko.backend.interfaces.dto.AuthUserDTO;
-import com.walletko.backend.interfaces.dto.SessionRefDTO;
 import com.walletko.backend.interfaces.dto.request.SendOtpRequest;
 import com.walletko.backend.interfaces.dto.request.VerifyOtpRequest;
 import com.walletko.backend.interfaces.dto.response.MessageResponse;

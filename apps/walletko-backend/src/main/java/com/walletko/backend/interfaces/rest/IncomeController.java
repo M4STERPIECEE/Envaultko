@@ -4,7 +4,6 @@ import com.walletko.backend.application.income.*;
 import com.walletko.backend.application.tag.ResolveOwnedTags;
 import com.walletko.backend.domain.income.*;
 import com.walletko.backend.domain.shared.vo.*;
-import com.walletko.backend.interfaces.dto.BlockingPotDTO;
 import com.walletko.backend.interfaces.dto.CancelIncomeResponse;
 import com.walletko.backend.interfaces.dto.CancelPreviewDTO;
 import com.walletko.backend.interfaces.dto.IncomeDTO;
@@ -12,6 +11,7 @@ import com.walletko.backend.interfaces.dto.response.IdResponse;
 import com.walletko.backend.interfaces.dto.request.ReceiveIncomeRequest;
 import com.walletko.backend.interfaces.dto.request.UpdateIncomeRequest;
 import com.walletko.backend.interfaces.mapper.IncomeViewMapper;
+import com.walletko.backend.interfaces.mapper.RequestMapper;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -26,19 +26,22 @@ public class IncomeController {
     private final CancelIncomeService cancelIncomeService;
     private final ResolveOwnedTags resolveOwnedTags;
     private final IncomeViewMapper incomeViewMapper;
+    private final RequestMapper requestMapper;
 
     public IncomeController(IncomeRepository incomeRepo,
                              ReceiveIncomeService receiveIncomeService,
                              UpdateIncomeService updateIncomeService,
                              CancelIncomeService cancelIncomeService,
                              ResolveOwnedTags resolveOwnedTags,
-                             IncomeViewMapper incomeViewMapper) {
+                             IncomeViewMapper incomeViewMapper,
+                             RequestMapper requestMapper) {
         this.incomeRepo = incomeRepo;
         this.receiveIncomeService = receiveIncomeService;
         this.updateIncomeService = updateIncomeService;
         this.cancelIncomeService = cancelIncomeService;
         this.resolveOwnedTags = resolveOwnedTags;
         this.incomeViewMapper = incomeViewMapper;
+        this.requestMapper = requestMapper;
     }
 
     private Id userId(Authentication auth) {
@@ -49,9 +52,8 @@ public class IncomeController {
     public ResponseEntity<IdResponse> receiveIncome(Authentication auth,
                                                      @Valid @RequestBody ReceiveIncomeRequest req) {
         var userId = userId(auth);
-        var tags = resolveOwnedTags.resolve(userId, req.tags().stream()
-            .map(t -> new ResolveOwnedTags.TagInput(t.id(), t.name())).toList());
-        var createdAt = req.createdAt() != null ? Datetime.of(req.createdAt()) : null;
+        var tags = resolveOwnedTags.resolve(userId, requestMapper.toTagInputs(req.tags()));
+        var createdAt = requestMapper.toDatetime(req.createdAt());
         var id = receiveIncomeService.execute(
             new Name(req.name()), Money.fromCents(req.amount()), tags, userId, createdAt);
         return ResponseEntity.ok(new IdResponse(id.value()));
@@ -71,26 +73,16 @@ public class IncomeController {
                                                     @PathVariable String id,
                                                     @Valid @RequestBody UpdateIncomeRequest req) {
         var userId = userId(auth);
-        var tags = resolveOwnedTags.resolve(userId, req.tags().stream()
-            .map(t -> new ResolveOwnedTags.TagInput(t.id(), t.name())).toList());
+        var tags = resolveOwnedTags.resolve(userId, requestMapper.toTagInputs(req.tags()));
         updateIncomeService.execute(new Id(id), new Name(req.name()),
-            Datetime.of(req.date()), tags, userId);
+            requestMapper.toDatetime(req.date()), tags, userId);
         return ResponseEntity.ok(new IdResponse(id));
     }
 
     @PostMapping("/{id}/cancel")
     public ResponseEntity<CancelIncomeResponse> cancelIncome(Authentication auth, @PathVariable String id) {
-        try {
-            cancelIncomeService.execute(new Id(id), userId(auth));
-            return ResponseEntity.ok(new CancelIncomeResponse(false, null, null));
-        } catch (CancelIncomeBlockedError e) {
-            return ResponseEntity.status(409).body(new CancelIncomeResponse(
-                true, "WOULD_CAUSE_NEGATIVE_BALANCE",
-                e.pots().stream()
-                    .map(p -> new BlockingPotDTO(p.name(), p.shortfall()))
-                    .toList()
-            ));
-        }
+        cancelIncomeService.execute(new Id(id), userId(auth));
+        return ResponseEntity.ok(new CancelIncomeResponse(false, null, null));
     }
 
     @GetMapping("/{id}/cancel-preview")

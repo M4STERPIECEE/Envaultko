@@ -1,6 +1,11 @@
 package com.walletko.backend.interfaces.mapper;
 
 import com.walletko.backend.domain.pot.PotSnapshot;
+import com.walletko.backend.domain.pot.PotUpdate;
+import com.walletko.backend.domain.shared.vo.Id;
+import com.walletko.backend.domain.shared.vo.Money;
+import com.walletko.backend.interfaces.dto.OtherPotDTO;
+import com.walletko.backend.interfaces.dto.PotAllocationDTO;
 import com.walletko.backend.interfaces.dto.PotWithBalanceDTO;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -19,4 +24,24 @@ public interface PotViewMapper {
     PotWithBalanceDTO toDto(PotSnapshot snapshot);
 
     List<PotWithBalanceDTO> toDtos(List<PotSnapshot> snapshots);
+
+    default List<PotUpdate> toPotUpdatesFromOtherPots(List<OtherPotDTO> otherPots) {
+        return otherPots.stream()
+            .map(o -> new PotUpdate(new Id(o.id()), o.percentage()))
+            .toList();
+    }
+
+    default List<PotUpdate> toPotUpdatesFromAllocations(List<PotAllocationDTO> allocations) {
+        return allocations.stream()
+            .map(p -> new PotUpdate(new Id(p.id()), p.percentage()))
+            .toList();
+    }
+
+    default Id toId(String id) {
+        return id != null ? new Id(id) : null;
+    }
+
+    default Money toMoney(long cents) {
+        return Money.fromCents(cents);
+    }
 }
