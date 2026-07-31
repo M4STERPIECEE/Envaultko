@@ -39,9 +39,10 @@ export function ViewsPage() {
   });
 
   return (
-    <PageContent>
+    <PageContent className="space-y-8 pb-12">
       <PageHeader
-        title="Views"
+        eyebrow="Saved Filters & Insights"
+        title="Custom Views"
         action={
           <PageActions
             primary={{
@@ -55,7 +56,9 @@ export function ViewsPage() {
       />
 
       {views.length === 0 && (
-        <EmptyState>No views yet. Create your first view above.</EmptyState>
+        <EmptyState>
+          No views yet. Create your first view above to save custom filters.
+        </EmptyState>
       )}
 
       {views.length > 0 && (

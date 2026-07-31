@@ -32,7 +32,7 @@ export function PotsPage() {
   };
 
   return (
-    <PageContent>
+    <PageContent className="space-y-8 pb-12">
       <PageHeader
         eyebrow="Total Balance"
         title={<Money value={totalBalance} />}
@@ -63,29 +63,41 @@ export function PotsPage() {
         }
       />
 
-      {pots.length === 0 && <EmptyState>No pots yet.</EmptyState>}
+      {pots.length === 0 && (
+        <EmptyState>No pots yet. Create one to organize your funds.</EmptyState>
+      )}
 
       {pots.length > 0 && (
-        <DataList
-          header={
-            <>
-              <div className="size-3 shrink-0" />
-              <DataListHead className="flex-1">Pot</DataListHead>
-              <DataListHead className="w-12 text-right">Share</DataListHead>
-              <DataListHead className="w-24 text-right">Balance</DataListHead>
-              <div className="size-8 shrink-0" />
-            </>
-          }
-        >
-          {pots.map((pot) => (
-            <PotRow
-              key={pot.id}
-              pot={pot}
-              onEdit={setEditingPot}
-              onArchive={handleArchive}
-            />
-          ))}
-        </DataList>
+        <div className="space-y-3">
+          <div className="flex items-center justify-between px-1">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              Active Pots ({pots.length})
+            </h2>
+          </div>
+
+          <DataList
+            header={
+              <>
+                <div className="size-3 shrink-0" />
+                <DataListHead className="flex-1">Pot Name</DataListHead>
+                <DataListHead className="w-28 text-right">
+                  Target Share
+                </DataListHead>
+                <DataListHead className="w-28 text-right">Balance</DataListHead>
+                <div className="size-8 shrink-0" />
+              </>
+            }
+          >
+            {pots.map((pot) => (
+              <PotRow
+                key={pot.id}
+                pot={pot}
+                onEdit={setEditingPot}
+                onArchive={handleArchive}
+              />
+            ))}
+          </DataList>
+        </div>
       )}
 
       <AddPotDialog

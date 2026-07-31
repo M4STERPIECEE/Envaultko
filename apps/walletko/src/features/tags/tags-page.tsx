@@ -4,7 +4,7 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import { PencilIcon, PlusIcon, Trash2Icon } from "lucide-react";
+import { PencilIcon, PlusIcon, Tag, Trash2Icon } from "lucide-react";
 import { useState } from "react";
 import { AddTagDialog } from "src/features/tags/components/add-tag-dialog";
 import { EditTagDialog } from "src/features/tags/components/edit-tag-dialog";
@@ -54,8 +54,9 @@ export function TagsPage() {
   const totalPages = Math.ceil(total / TAGS_PAGE_SIZE);
 
   return (
-    <PageContent>
+    <PageContent className="space-y-8 pb-12">
       <PageHeader
+        eyebrow="Organization & Categorization"
         title="Tags"
         action={
           <PageActions
@@ -86,16 +87,24 @@ export function TagsPage() {
         <DataList
           header={
             <>
-              <DataListHead className="flex-1">Tag</DataListHead>
+              <DataListHead className="flex-1">Tag Name</DataListHead>
               <div className="size-8 shrink-0" />
             </>
           }
         >
           {items.map((tag) => (
-            <DataListRow key={tag.id}>
-              <span className="flex-1 truncate text-sm font-medium">
-                {tag.name}
-              </span>
+            <DataListRow
+              key={tag.id}
+              className="group transition-all duration-200 hover:bg-muted/40 p-3.5 rounded-xl border border-transparent hover:border-border/60"
+            >
+              <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <Tag className="size-3.5" />
+                </div>
+                <span className="truncate text-sm font-semibold text-foreground/90 group-hover:text-foreground">
+                  {tag.name}
+                </span>
+              </div>
 
               <RowActions label={`Actions for ${tag.name}`}>
                 <DropdownMenuItem
@@ -106,7 +115,7 @@ export function TagsPage() {
                   Edit
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  className="cursor-pointer gap-2"
+                  className="cursor-pointer gap-2 text-destructive focus:text-destructive"
                   variant="destructive"
                   onClick={() => setDeletingTag(tag)}
                 >

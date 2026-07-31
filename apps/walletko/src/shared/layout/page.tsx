@@ -1,6 +1,19 @@
-export function PageContent({ children }: { children: React.ReactNode }) {
+import { cn } from "src/shared/lib/utils";
+
+export function PageContent({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
   return (
-    <div className="mx-auto max-w-4xl space-y-6 px-4 py-6 pb-28 sm:px-6 lg:pb-10">
+    <div
+      className={cn(
+        "mx-auto max-w-4xl space-y-6 px-4 py-6 pb-28 sm:px-6 lg:pb-10",
+        className,
+      )}
+    >
       {children}
     </div>
   );

@@ -45,7 +45,7 @@ export function DashboardPage() {
   });
 
   return (
-    <PageContent>
+    <PageContent className="space-y-8 pb-12">
       <PageHeader
         eyebrow="Welcome back,"
         title={user.name}
@@ -53,20 +53,20 @@ export function DashboardPage() {
           <PageActions
             primary={{
               key: "add",
-              label: "Add",
+              label: "New Transaction",
               icon: <PlusIcon className="size-4" />,
               onClick: () => {},
               items: [
                 {
                   key: "income",
-                  label: "Income",
-                  icon: <ArrowDownLeft className="size-4" />,
+                  label: "Add Income",
+                  icon: <ArrowDownLeft className="size-4 text-income" />,
                   onClick: () => setAddIncomeOpen(true),
                 },
                 {
                   key: "expense",
-                  label: "Expense",
-                  icon: <ArrowUpRight className="size-4" />,
+                  label: "Add Expense",
+                  icon: <ArrowUpRight className="size-4 text-destructive" />,
                   onClick: () => setAddExpenseOpen(true),
                 },
               ],
@@ -82,23 +82,33 @@ export function DashboardPage() {
             <PopoverTrigger
               render={
                 <Button
-                  variant="ghost"
-                  size="icon"
-                  className="size-7 cursor-pointer text-muted-foreground"
+                  variant="outline"
+                  size="sm"
+                  className="h-8 gap-1.5 text-xs font-medium cursor-pointer text-muted-foreground hover:text-foreground"
                   aria-label="Customize visible stats"
-                />
+                >
+                  <Settings className="size-3.5" />
+                  <span>Customize</span>
+                </Button>
               }
+            />
+            <PopoverContent
+              side="bottom"
+              align="end"
+              className="w-64 p-3 shadow-xl rounded-xl"
             >
-              <Settings className="size-3.5" />
-            </PopoverTrigger>
-            <PopoverContent side="bottom" align="end" className="w-56">
+              <div className="space-y-1 mb-2 px-1">
+                <p className="text-xs font-bold uppercase text-muted-foreground tracking-wider">
+                  Stat Visibility
+                </p>
+              </div>
               <div className="space-y-2">
                 {STAT_KEYS.map((key) => (
                   <div
                     key={key}
-                    className="flex items-center justify-between gap-2"
+                    className="flex items-center justify-between gap-2 p-1.5 rounded-lg hover:bg-muted/50 transition-colors"
                   >
-                    <span className="text-sm">{labels[key]}</span>
+                    <span className="text-xs font-medium">{labels[key]}</span>
                     <Switch
                       checked={visible.has(key)}
                       onCheckedChange={() => toggle(key)}
@@ -111,7 +121,7 @@ export function DashboardPage() {
           </Popover>
         }
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
           {visible.has("totalBalance") && (
             <StatCard
               label="Total Balance"
@@ -158,10 +168,9 @@ export function DashboardPage() {
 
       {topPots.length > 0 && (
         <SectionHeading title="Top Pots">
-          {/* Mobile: horizontal scroll */}
-          <div className="lg:hidden flex gap-3 overflow-x-auto pb-1 snap-x snap-mandatory">
+          <div className="lg:hidden flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-none">
             {topPots.map((pot) => (
-              <div key={pot.id} className="min-w-[160px] snap-start">
+              <div key={pot.id} className="min-w-[200px] snap-start">
                 <PotStatCard
                   name={pot.name}
                   balance={pot.balance}
@@ -171,8 +180,7 @@ export function DashboardPage() {
               </div>
             ))}
           </div>
-          {/* Desktop: grid */}
-          <div className="hidden lg:grid grid-cols-4 gap-3">
+          <div className="hidden lg:grid grid-cols-4 gap-4">
             {topPots.map((pot) => (
               <PotStatCard
                 key={pot.id}
@@ -186,7 +194,6 @@ export function DashboardPage() {
         </SectionHeading>
       )}
 
-      {/* Yearly chart */}
       {yearStats && (
         <YearlyChart
           data={yearStats}
