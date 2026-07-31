@@ -7,161 +7,130 @@ import com.walletko.backend.domain.savedview.SavedView;
 import com.walletko.backend.domain.shared.vo.*;
 import com.walletko.backend.domain.tag.Tag;
 import com.walletko.backend.infrastructure.persistence.entity.*;
-import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-import java.util.*;
-import java.util.stream.Collectors;
+import org.springframework.stereotype.Component;
 
+import jakarta.annotation.PostConstruct;
+import java.time.OffsetDateTime;
+
+@Component
 public class DomainMapper {
 
-    // ── Timestamp helpers ──
+    private static PotMapper potMapperStatic;
+    private static TagMapper tagMapperStatic;
+    private static SavedViewMapper savedViewMapperStatic;
+    private static TransactionMapper transactionMapperStatic;
+    private static PotAllocationMapper potAllocationMapperStatic;
+    private static ExpenseAllocationMapper expenseAllocationMapperStatic;
+    private static ValueObjectMapper valueObjectMapperStatic;
+
+    private final PotMapper potMapper;
+    private final TagMapper tagMapper;
+    private final SavedViewMapper savedViewMapper;
+    private final TransactionMapper transactionMapper;
+    private final PotAllocationMapper potAllocationMapper;
+    private final ExpenseAllocationMapper expenseAllocationMapper;
+    private final ValueObjectMapper valueObjectMapper;
+
+    public DomainMapper(PotMapper potMapper, TagMapper tagMapper, SavedViewMapper savedViewMapper,
+                        TransactionMapper transactionMapper, PotAllocationMapper potAllocationMapper,
+                        ExpenseAllocationMapper expenseAllocationMapper, ValueObjectMapper valueObjectMapper) {
+        this.potMapper = potMapper;
+        this.tagMapper = tagMapper;
+        this.savedViewMapper = savedViewMapper;
+        this.transactionMapper = transactionMapper;
+        this.potAllocationMapper = potAllocationMapper;
+        this.expenseAllocationMapper = expenseAllocationMapper;
+        this.valueObjectMapper = valueObjectMapper;
+    }
+
+    @PostConstruct
+    public void init() {
+        potMapperStatic = potMapper;
+        tagMapperStatic = tagMapper;
+        savedViewMapperStatic = savedViewMapper;
+        transactionMapperStatic = transactionMapper;
+        potAllocationMapperStatic = potAllocationMapper;
+        expenseAllocationMapperStatic = expenseAllocationMapper;
+        valueObjectMapperStatic = valueObjectMapper;
+    }
+
     public static OffsetDateTime toOdt(Datetime dt) {
-        return dt != null ? OffsetDateTime.ofInstant(dt.value(), ZoneOffset.UTC) : null;
+        return valueObjectMapperStatic.toOdt(dt);
     }
 
     public static Datetime toDt(OffsetDateTime odt) {
-        return odt != null ? Datetime.of(odt.toInstant()) : null;
+        return valueObjectMapperStatic.toDt(odt);
     }
 
-    // ── Pot ──
     public static PotEntity toJpa(Pot domain) {
-        var d = domain.data();
-        var e = new PotEntity();
-        e.setId(d.id().value());
-        e.setName(d.name().value());
-        e.setPercentage(d.percentage().value());
-        e.setColor(d.color().value());
-        e.setDefault(d.isDefault());
-        e.setUserId(d.userId().value());
-        e.setCreatedAt(toOdt(d.createdAt()));
-        e.setUpdatedAt(toOdt(d.updatedAt()));
-        e.setArchivedAt(toOdt(d.archivedAt()));
-        return e;
+        return potMapperStatic.toJpa(domain.data());
     }
 
     public static Pot toDomain(PotEntity e) {
-        return new Pot(
-            new Id(e.getId()), new Name(e.getName()),
-            new Percentage(e.getPercentage()), new Color(e.getColor()),
-            e.isDefault(), new Id(e.getUserId()),
-            toDt(e.getCreatedAt()), toDt(e.getUpdatedAt()), toDt(e.getArchivedAt())
-        );
+        return potMapperStatic.toDomain(e);
     }
 
-    // ── Tag ──
     public static TagEntity toJpa(Tag domain) {
-        var d = domain.data();
-        var e = new TagEntity();
-        e.setId(d.id().value());
-        e.setName(d.name().value());
-        e.setUserId(d.userId().value());
-        e.setCreatedAt(toOdt(d.createdAt()));
-        return e;
+        return tagMapperStatic.toJpa(domain.data());
     }
 
     public static Tag toDomain(TagEntity e) {
-        return new Tag(new Id(e.getId()), new Name(e.getName()),
-                       new Id(e.getUserId()), toDt(e.getCreatedAt()), null);
+        return tagMapperStatic.toDomain(e);
     }
 
-    // ── Transaction ──
-    public static TransactionEntity toJpa(String type, Id id, Name name, Money amount,
-                                           Id userId, String cancelsTransactionId,
-                                           Datetime createdAt, Datetime updatedAt) {
-        var e = new TransactionEntity();
-        e.setId(id.value());
-        e.setType(type);
-        e.setName(name.value());
-        e.setAmount(amount.rawCents());
-        e.setUserId(userId.value());
-        e.setCancelsTransactionId(cancelsTransactionId);
-        e.setCreatedAt(toOdt(createdAt));
-        e.setUpdatedAt(toOdt(updatedAt != null ? updatedAt : createdAt));
-        return e;
+    public static TransactionEntity toJpa(IncomeData d) {
+        return transactionMapperStatic.toJpa(d);
     }
 
-    // ── PotAllocation (income) ──
+    public static TransactionEntity toJpa(ExpenseData d) {
+        return transactionMapperStatic.toJpa(d);
+    }
+
+    public static TransactionEntity toJpa(TransferData d) {
+        return transactionMapperStatic.toJpa(d);
+    }
+
+    public static TransactionEntity toJpa(com.walletko.backend.domain.income.CancellationData d) {
+        return transactionMapperStatic.toJpa(d);
+    }
+
+    public static TransactionEntity toJpa(com.walletko.backend.domain.expense.CancellationData d) {
+        return transactionMapperStatic.toJpa(d);
+    }
+
     public static PotAllocationEntity toJpa(PotAllocation domain) {
-        var d = domain.data();
-        var e = new PotAllocationEntity();
-        e.setId(d.id().value());
-        e.setTransactionId(d.incomeId().value());
-        e.setPotId(d.potId().value());
-        e.setAmount(d.amount().rawCents());
-        e.setCreatedAt(toOdt(d.createdAt()));
-        e.setUpdatedAt(toOdt(d.updatedAt()));
-        return e;
+        return potAllocationMapperStatic.toJpa(domain.data());
     }
 
     public static PotAllocation toDomain(PotAllocationEntity e, Id incomeId) {
-        return new PotAllocation(
-            new Id(e.getId()), new Id(e.getPotId()), incomeId,
-            Money.fromCents(e.getAmount()), toDt(e.getCreatedAt()), toDt(e.getUpdatedAt())
-        );
+        return potAllocationMapperStatic.toDomain(e, incomeId);
     }
 
-    // ── ExpenseAllocation ──
     public static ExpenseAllocationEntity toJpa(ExpenseAllocation domain) {
-        var d = domain.data();
-        var e = new ExpenseAllocationEntity();
-        e.setId(d.id().value());
-        e.setTransactionId(d.expenseId().value());
-        e.setPotId(d.potId().value());
-        e.setAmount(d.amount().rawCents());
-        e.setCreatedAt(toOdt(d.createdAt()));
-        e.setUpdatedAt(toOdt(d.updatedAt()));
-        return e;
+        return expenseAllocationMapperStatic.toJpa(domain.data());
     }
 
     public static ExpenseAllocation toDomain(ExpenseAllocationEntity e, Id expenseId) {
-        return new ExpenseAllocation(
-            new Id(e.getId()), new Id(e.getPotId()), expenseId,
-            Money.fromCents(e.getAmount()), toDt(e.getCreatedAt()), toDt(e.getUpdatedAt())
-        );
+        return expenseAllocationMapperStatic.toDomain(e, expenseId);
     }
 
-    // ── TransactionTag ──
+    public static PotAllocationEntity potAllocation(Id transactionId, Id potId, Money amount, Datetime at) {
+        return transactionMapperStatic.potAllocation(transactionId, potId, amount, at);
+    }
+
+    public static ExpenseAllocationEntity expenseAllocation(Id transactionId, Id potId, Money amount, Datetime at) {
+        return transactionMapperStatic.expenseAllocation(transactionId, potId, amount, at);
+    }
+
     public static TransactionTagEntity toJpa(String transactionId, String tagId) {
-        return new TransactionTagEntity(transactionId, tagId);
+        return transactionMapperStatic.toJpa(transactionId, tagId);
     }
 
-    // ── SavedView ──
     public static SavedViewEntity toJpa(SavedView domain) {
-        var d = domain.data();
-        var e = new SavedViewEntity();
-        e.setId(d.id().value());
-        e.setUserId(d.userId().value());
-        e.setName(d.name().value());
-        e.setDescription(d.description());
-        e.setNameFilter(d.nameFilter());
-        e.setTagIds(toPgArray(d.tagIds()));
-        e.setCreatedAt(toOdt(d.createdAt()));
-        e.setUpdatedAt(toOdt(d.updatedAt()));
-        return e;
+        return savedViewMapperStatic.toJpa(domain.data());
     }
 
     public static SavedView toDomain(SavedViewEntity e) {
-        return new SavedView(
-            new Id(e.getId()), new Id(e.getUserId()),
-            new Name(e.getName()), e.getDescription(), e.getNameFilter(),
-            fromPgArray(e.getTagIds()), toDt(e.getCreatedAt()), toDt(e.getUpdatedAt())
-        );
-    }
-
-    private static String toPgArray(List<Id> ids) {
-        if (ids == null || ids.isEmpty()) return "{}";
-        return ids.stream().map(id -> "\"" + id.value() + "\"")
-                  .collect(Collectors.joining(",", "{", "}"));
-    }
-
-    private static List<Id> fromPgArray(String pgArray) {
-        if (pgArray == null || pgArray.equals("{}") || pgArray.isBlank()) return List.of();
-        String trimmed = pgArray.substring(1, pgArray.length() - 1);
-        return Arrays.stream(trimmed.split(","))
-            .map(s -> s.replace("\"", "").trim())
-            .filter(s -> !s.isEmpty())
-            .map(Id::new)
-            .toList();
+        return savedViewMapperStatic.toDomain(e);
     }
 }

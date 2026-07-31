@@ -1,90 +1,68 @@
 package com.walletko.backend.interfaces.rest;
 
-import com.walletko.backend.infrastructure.security.OtpService;
-import com.walletko.backend.infrastructure.security.SessionManager;
-import com.walletko.backend.infrastructure.persistence.repository.UserJpaRepository;
+import com.walletko.backend.application.auth.AuthService;
+import com.walletko.backend.interfaces.dto.AuthSessionDTO;
+import com.walletko.backend.interfaces.dto.AuthUserDTO;
+import com.walletko.backend.interfaces.dto.SessionRefDTO;
+import com.walletko.backend.interfaces.dto.request.SendOtpRequest;
+import com.walletko.backend.interfaces.dto.request.VerifyOtpRequest;
+import com.walletko.backend.interfaces.dto.response.MessageResponse;
+import com.walletko.backend.interfaces.mapper.AuthViewMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.*;
-import java.util.Map;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
-    private final OtpService otpService;
-    private final SessionManager sessionManager;
-    private final UserJpaRepository userRepo;
 
-    public AuthController(OtpService otpService, SessionManager sessionManager,
-                           UserJpaRepository userRepo) {
-        this.otpService = otpService;
-        this.sessionManager = sessionManager;
-        this.userRepo = userRepo;
+    private final AuthService authService;
+    private final AuthViewMapper authViewMapper;
+
+    public AuthController(AuthService authService, AuthViewMapper authViewMapper) {
+        this.authService = authService;
+        this.authViewMapper = authViewMapper;
     }
 
     @PostMapping("/email-otp/send-verification-otp")
-    public ResponseEntity<?> sendOtp(@RequestBody Map<String, String> body) {
-        var email = body.get("email");
-        if (email == null || email.isBlank()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Email is required"));
-        }
-        otpService.sendOtp(email);
-        return ResponseEntity.ok(Map.of("message", "Code sent"));
+    public ResponseEntity<MessageResponse> sendOtp(@Valid @RequestBody SendOtpRequest request) {
+        authService.sendOtp(request.email());
+        return ResponseEntity.ok(new MessageResponse("Code sent"));
     }
 
     @PostMapping("/sign-in/email-otp")
-    public ResponseEntity<?> verifyOtp(@RequestBody Map<String, String> body,
-                                        HttpServletResponse response) {
-        var email = body.get("email");
-        var otp = body.get("otp");
-        if (email == null || otp == null) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Email and OTP are required"));
-        }
-        if (!otpService.verifyOtp(email, otp)) {
-            return ResponseEntity.status(401).body(Map.of("error", "Invalid or expired code"));
-        }
-        var user = sessionManager.createSession(email, response);
-        return ResponseEntity.ok(Map.of(
-            "user", Map.of("id", user.getId(), "name", user.getName(), "email", user.getEmail()),
-            "session", Map.of("id", user.getId())
-        ));
+    public ResponseEntity<AuthSessionDTO> verifyOtp(@Valid @RequestBody VerifyOtpRequest request,
+                                                    HttpServletResponse response) {
+        var user = authService.signInWithOtp(request.email(), request.otp(), response);
+        return ResponseEntity.ok(authViewMapper.toSession(user));
     }
 
     @PostMapping("/sign-out")
-    public ResponseEntity<?> signOut(HttpServletRequest request, HttpServletResponse response) {
-        sessionManager.destroySession(request, response);
-        return ResponseEntity.ok(Map.of("message", "Signed out"));
+    public ResponseEntity<MessageResponse> signOut(HttpServletRequest request,
+                                                   HttpServletResponse response) {
+        authService.signOut(request, response);
+        return ResponseEntity.ok(new MessageResponse("Signed out"));
     }
 
     @GetMapping("/session")
-    public ResponseEntity<?> getSession(Authentication authentication) {
-        if (authentication == null || authentication.getPrincipal() == null) {
-            return ResponseEntity.ok(Map.of("user", null, "session", null));
-        }
-        var userId = (String) authentication.getPrincipal();
-        var userOpt = userRepo.findById(userId);
-        if (userOpt.isEmpty()) {
-            return ResponseEntity.ok(Map.of("user", null, "session", null));
-        }
-        var user = userOpt.get();
-        return ResponseEntity.ok(Map.of(
-            "user", Map.of("id", user.getId(), "name", user.getName(),
-                           "email", user.getEmail(), "emailVerified", user.isEmailVerified()),
-            "session", Map.of("id", user.getId())
-        ));
+    public ResponseEntity<AuthSessionDTO> getSession(Authentication authentication) {
+        return authService.currentUser(authentication)
+            .map(user -> ResponseEntity.ok(authViewMapper.toSession(user)))
+            .orElse(ResponseEntity.ok(new AuthSessionDTO(null, null)));
     }
 
     @GetMapping("/me")
-    public ResponseEntity<?> me(Authentication authentication) {
-        if (authentication == null || authentication.getPrincipal() == null) {
-            return ResponseEntity.status(401).build();
-        }
-        var userId = (String) authentication.getPrincipal();
-        return userRepo.findById(userId)
-            .map(u -> ResponseEntity.ok(Map.of(
-                "id", u.getId(), "name", u.getName(), "email", u.getEmail())))
-            .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<AuthUserDTO> me(Authentication authentication) {
+        return authService.currentUser(authentication)
+            .map(user -> ResponseEntity.ok(authViewMapper.toUser(user)))
+            .orElse(ResponseEntity.status(401).build());
     }
 }
+

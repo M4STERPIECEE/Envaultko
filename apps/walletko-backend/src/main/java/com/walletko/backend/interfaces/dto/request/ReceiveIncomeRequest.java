@@ -1,5 +1,6 @@
-package com.walletko.backend.interfaces.dto;
+package com.walletko.backend.interfaces.dto.request;
 
+import com.walletko.backend.interfaces.dto.TagInputDTO;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 

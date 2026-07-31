@@ -4,7 +4,6 @@ import com.walletko.backend.infrastructure.persistence.query.DashboardQueries;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/dashboard")

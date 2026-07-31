@@ -1,6 +1,10 @@
 package com.walletko.backend.infrastructure.persistence.repository;
 
-import com.walletko.backend.domain.income.*;
+import com.walletko.backend.domain.income.CancellationData;
+import com.walletko.backend.domain.income.IncomeCancellation;
+import com.walletko.backend.domain.income.IncomeCancellationRepository;
+import com.walletko.backend.domain.shared.vo.Id;
+import com.walletko.backend.domain.shared.vo.Name;
 import com.walletko.backend.infrastructure.persistence.mapper.DomainMapper;
 import org.springframework.stereotype.Repository;
 
@@ -18,30 +22,21 @@ public class DrizzleIncomeCancellationRepository implements IncomeCancellationRe
     @Override
     public void save(IncomeCancellation cancellation) {
         var d = cancellation.data();
-        // Create the income_cancellation transaction (negative impact on balance)
-        var tx = DomainMapper.toJpa("income_cancellation", d.id(), d.name(),
-                                     d.amount(), d.userId(),
-                                     d.cancelsTransactionId().value(),
-                                     d.createdAt(), d.createdAt());
-        txJpa.save(tx);
+        txJpa.save(DomainMapper.toJpa(d));
 
-        // Create expense allocations for each line (money leaving pots)
         for (var line : d.lines()) {
-            var alloc = new com.walletko.backend.infrastructure.persistence.entity.ExpenseAllocationEntity();
-            alloc.setId(java.util.UUID.randomUUID().toString());
-            alloc.setTransactionId(d.id().value());
-            alloc.setPotId(line.potId().value());
-            alloc.setAmount(line.amount().rawCents());
-            alloc.setCreatedAt(DomainMapper.toOdt(d.createdAt()));
-            alloc.setUpdatedAt(DomainMapper.toOdt(d.createdAt()));
-            expenseAllocJpa.save(alloc);
+            expenseAllocJpa.save(DomainMapper.expenseAllocation(d.id(), line.potId(), line.amount(), d.createdAt()));
         }
 
-        // Create canceled_income marker
-        var markTx = DomainMapper.toJpa("canceled_income", com.walletko.backend.domain.shared.vo.Id.generate(),
-            new com.walletko.backend.domain.shared.vo.Name("Canceled: " + d.name().value()),
-            d.amount(), d.userId(), d.cancelsTransactionId().value(),
-            d.createdAt(), d.createdAt());
-        txJpa.save(markTx);
+        var markData = new CancellationData(
+            Id.generate(),
+            d.cancelsTransactionId(),
+            new Name("Canceled: " + d.name().value()),
+            d.amount(),
+            d.userId(),
+            d.lines(),
+            d.createdAt()
+        );
+        txJpa.save(DomainMapper.toJpa(markData));
     }
 }

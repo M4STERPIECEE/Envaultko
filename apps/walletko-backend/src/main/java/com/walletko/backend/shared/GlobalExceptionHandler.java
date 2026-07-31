@@ -1,5 +1,6 @@
 package com.walletko.backend.shared;
 
+import com.walletko.backend.application.auth.InvalidOtpError;
 import com.walletko.backend.domain.income.CancelIncomeBlockedError;
 import com.walletko.backend.domain.savedview.SavedViewNameConflictError;
 import com.walletko.backend.domain.tag.TagNameConflictError;
@@ -11,6 +12,11 @@ import java.util.Map;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(InvalidOtpError.class)
+    public ResponseEntity<Map<String, String>> handleInvalidOtp(InvalidOtpError e) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", e.getMessage()));
+    }
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, String>> handleBadRequest(IllegalArgumentException e) {
