@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.0.1](https://github.com/M4STERPIECEE/Envaultko/compare/v1.0.0...v1.0.1) (2026-08-01)
+
+
+### Bug Fixes
+
+* **finance-to-walletko:** update migration dir path after app rebranding ([bfa6179](https://github.com/M4STERPIECEE/Envaultko/commit/bfa6179f99cfef7953c8902b52635c25c914baff))
+
+
+### Refactors
+
+* extract form context for reusable form fields ([e335f74](https://github.com/M4STERPIECEE/Envaultko/commit/e335f7430d6f6387223997ea3926f5521dbc0293))
+* extract form context for reusable form fields ([e153bc1](https://github.com/M4STERPIECEE/Envaultko/commit/e153bc10ed3f7f48b4f951c7c17b2cf5dac5fae7))
+
 ## 1.0.0 (2026-07-31)
 
 
