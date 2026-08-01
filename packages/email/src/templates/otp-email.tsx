@@ -13,7 +13,7 @@ import {
 } from "@react-email/components";
 import { render } from "@react-email/render";
 
-const BRAND_URL = process.env.APP_URL ?? "https://walletko.herynirintsoa.com";
+const BRAND_URL = process.env.APP_URL ?? "https://envaultko.herynirintsoa.com";
 const LOGO_SRC = `${BRAND_URL}/logo-256.png`;
 
 const fontStack =

@@ -1,4 +1,4 @@
--- Walletko schema — matches the original Drizzle schema exactly
+-- Envaultko schema — matches the original Drizzle schema exactly
 
 -- Auth tables (better-auth compatible)
 CREATE TABLE IF NOT EXISTS "user" (

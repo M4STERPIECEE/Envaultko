@@ -112,16 +112,16 @@ jobs:
             APP_VERSION=${{ needs.release-please.outputs.version }}
             APP_RELEASE_DATE=${{ steps.meta.outputs.date }}
 
-      - name: Build and push finance-to-walletko
+      - name: Build and push finance-to-envaultko
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: apps/finance-to-walletko/Dockerfile
+          file: apps/finance-to-envaultko/Dockerfile
           target: runner
           push: true
           tags: |
-            ghcr.io/m4sterpiecee/finance-to-walletko:${{ needs.release-please.outputs.version }}
-            ghcr.io/m4sterpiecee/finance-to-walletko:latest
+            ghcr.io/m4sterpiecee/finance-to-envaultko:${{ needs.release-please.outputs.version }}
+            ghcr.io/m4sterpiecee/finance-to-envaultko:latest
 
   snapshot:
     name: Publish snapshot image

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-const SIDEBAR_STORAGE_KEY = "walletko:sidebar-collapsed";
+const SIDEBAR_STORAGE_KEY = "envaultko:sidebar-collapsed";
 
 export function useSidebarCollapsed() {
   const [collapsed, setCollapsed] = useState(false);

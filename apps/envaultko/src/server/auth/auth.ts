@@ -1,5 +1,5 @@
 import { createId } from "@paralleldrive/cuid2";
-import { renderOtpEmail } from "@walletko/email";
+import { renderOtpEmail } from "@envaultko/email";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { emailOTP } from "better-auth/plugins";

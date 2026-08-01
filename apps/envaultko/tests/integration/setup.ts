@@ -3,7 +3,7 @@ import fs from "fs";
 import os from "os";
 import path from "path";
 
-export const URL_FILE = path.join(os.tmpdir(), "walletko-integration-db-url");
+export const URL_FILE = path.join(os.tmpdir(), "envaultko-integration-db-url");
 
 export default async function setup() {
   const container = await new PostgreSqlContainer("postgres:16-alpine").start();
