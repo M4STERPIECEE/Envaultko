@@ -1,1 +1,1 @@
-pnpm --filter walletko depcruise
+pnpm --filter envaultko depcruise
