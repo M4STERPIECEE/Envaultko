@@ -1,12 +1,6 @@
 # Changelog
 
-## [1.0.1](https://github.com/M4STERPIECEE/Envaultko/compare/v1.0.0...v1.0.1) (2026-08-01)
-
-
-### Bug Fixes
-
-* **finance-to-walletko:** update migration dir path after app rebranding ([bfa6179](https://github.com/M4STERPIECEE/Envaultko/commit/bfa6179f99cfef7953c8902b52635c25c914baff))
-
+## [1.0.1](https://github.com/M4STERPIECEE/Envaultko/compare/v1.0.0...v1.0.1) (2026-08-01
 
 ### Refactors
 
