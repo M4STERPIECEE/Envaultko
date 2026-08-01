@@ -1,7 +1,6 @@
 # Changelog
 
-## [1.0.1](https://github.com/M4STERPIECEE/Envaultko/compare/v1.0.0...v1.0.1) (2026-07-31)
-
+## [1.0.1](https://github.com/M4STERPIECEE/Envaultko/compare/v1.0.0...v1.0.1) (2026-08-01
 
 ### Refactors
 
