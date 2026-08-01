@@ -29,7 +29,7 @@ import { PageActions } from "src/shared/ui/page-actions";
 import { Popover, PopoverContent, PopoverTrigger } from "src/shared/ui/popover";
 import { Switch } from "src/shared/ui/switch";
 
-const user = { name: "Hery Nirintsoa" };
+const user = { name: "Michaël RAMANAMPAMONJY" };
 
 export function DashboardPage() {
   const { visible, toggle, labels } = useStatVisibility();
