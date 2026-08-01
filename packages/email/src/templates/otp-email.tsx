@@ -13,7 +13,7 @@ import {
 } from "@react-email/components";
 import { render } from "@react-email/render";
 
-const BRAND_URL = process.env.APP_URL ?? "https://walletko.herynirintsoa.com";
+const BRAND_URL = process.env.APP_URL ?? "https://envaultko.herynirintsoa.com";
 const LOGO_SRC = `${BRAND_URL}/logo-256.png`;
 
 const fontStack =
@@ -159,7 +159,7 @@ export default function OtpEmail({ otp }: OtpEmailProps) {
         <meta name="color-scheme" content="light" />
         <meta name="supported-color-schemes" content="light" />
       </Head>
-      <Preview>Your Walletko sign-in code: {otp}</Preview>
+      <Preview>Your Envaultko sign-in code: {otp}</Preview>
       <Body style={styles.body}>
         <Container style={styles.card}>
           <Section style={styles.rail}>&nbsp;</Section>
@@ -182,13 +182,13 @@ export default function OtpEmail({ otp }: OtpEmailProps) {
                           src={LOGO_SRC}
                           width="40"
                           height="40"
-                          alt="Walletko"
+                          alt="Envaultko"
                           style={styles.logoImg}
                         />
                       </span>
                     </td>
                     <td style={{ verticalAlign: "middle" }}>
-                      <span style={styles.wordmark}>Walletko</span>
+                      <span style={styles.wordmark}>Envaultko</span>
                     </td>
                   </tr>
                 </tbody>
@@ -197,7 +197,7 @@ export default function OtpEmail({ otp }: OtpEmailProps) {
 
             <Heading style={styles.heading}>Your sign-in code</Heading>
             <Text style={styles.body_text}>
-              Enter the code below to sign in to your Walletko account. We use
+              Enter the code below to sign in to your Envaultko account. We use
               it to confirm it&apos;s really you.
             </Text>
 
@@ -217,7 +217,7 @@ export default function OtpEmail({ otp }: OtpEmailProps) {
             </Text>
             <Text style={styles.tagline}>
               <Link href={BRAND_URL} style={styles.footerLink}>
-                Walletko
+                Envaultko
               </Link>{" "}
               — personal budget, simplified
             </Text>

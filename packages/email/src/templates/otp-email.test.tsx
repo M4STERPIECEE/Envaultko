@@ -12,9 +12,9 @@ describe("renderOtpEmail", () => {
     expect(html).toContain("5 minutes");
   });
 
-  it("includes Walletko branding", async () => {
+  it("includes Envaultko branding", async () => {
     const html = await renderOtpEmail("123456", "user@example.com");
-    expect(html).toContain("Walletko");
+    expect(html).toContain("Envaultko");
   });
 
   it("includes the sign-in instructions", async () => {
